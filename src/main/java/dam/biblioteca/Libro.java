@@ -2,11 +2,41 @@ package dam.biblioteca;
 	
 public class Libro {
 
-	static private Libro[] lista;
+	// Propiedades estáticas
+
+	private static Libro[] lista;
 	
-	static private String nombre;
-	static private String autor;
-	static private Categoria categoria;
-	static private String isbn;
+	// Propiedades no estáticas
+
+	private String nombre;
+	private String autor;
+	private Categoria categoria;
+	private String isbn;
 	
+	// Constructor
+
+	public Libro(String nombre, String autor, Categoria categoria, String isbn) {
+		this.nombre = nombre;
+		this.autor = autor;
+		this.categoria = categoria;
+		this.isbn = isbn;
+	}
+
+	// Getters
+
+	public String getNombre() {
+		return this.nombre;
+	}
+
+	public String getAutor() {
+		return this.autor;
+	}
+
+	public Categoria getCategoria() {
+		return this.categoria;
+	}
+
+	public String getIsbn() {
+		return this.isbn;
+	}
 }
