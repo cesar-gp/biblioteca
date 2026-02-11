@@ -19,7 +19,7 @@ El IDE recomendado para ejecutar el programa es Eclipse, porque es el que usamos
 Abre un terminal en cualquier carpeta y sigue estos pasos:
 
 1. Clona el repositorio: `git clone https://github.com/cesar-gp/biblioteca.git`.
-2. Abre en la carpeta que lo contiene: `cd biblioteca`.
+2. Abre la carpeta que lo contiene: `cd biblioteca`.
 3. Compila el proyecto con Maven: `mvn package`.
 4. Ejecútalo con Java: `java -cp target/biblioteca-0.0.1-SNAPSHOT.jar dam.biblioteca.Main`.
 
