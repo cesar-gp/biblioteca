@@ -139,6 +139,17 @@ public class Usuario {
 		return this.contrasena != null;
 	}
 
+	/**
+	 *	Devuelve si el usuario tiene la contraseña
+	 *	proporcionada como argumento o no.
+	 * 
+	 *	@return	Si el usuario tiene esa contraseña o no.
+	 */
+	public boolean tieneContrasena(String contrasena) {
+		return (this.contrasena == null && contrasena == null) ||
+			(this.contrasena != null && this.contrasena.equals(contrasena));
+	}
+
 	// Funciones
 
 	/**
@@ -158,6 +169,9 @@ public class Usuario {
 	 *	@return	Si se ha realizado la operación o no.
 	 */
 	public static boolean registrar(Usuario in) {
+		// ¿Usuario nulo? Operación cancelada.
+		if(in == null) return false;
+
 		// ¿Permiso denegado? Operación cancelada.
 		if(conectado == null || !conectado.admin) return false;
 
@@ -224,6 +238,9 @@ public class Usuario {
 	 *	@return	Si se ha realizado la operación o no.
 	 */
 	public static boolean eliminar(Usuario in) {
+		// ¿Usuario nulo? Operación cancelada.
+		if(in == null) return false;
+
 		// ¿Permiso denegado? Operación cancelada.
 		if(conectado == null ||
 			(!in.nombre.equalsIgnoreCase(conectado.nombre) && !conectado.admin))
@@ -340,10 +357,7 @@ public class Usuario {
 		if(!this.isRegistrado()) return false;
 
 		// ¿Contraseña incorrecta? Operación cancelada.
-		if((this.contrasena == null && contrasena != null) &&
-			(this.contrasena != null && contrasena == null) &&
-			(this.contrasena != null && !this.contrasena.equals(contrasena)))
-			return false;
+		if(!this.tieneContrasena(contrasena)) return false;
 
 		// Realizar operación.
 		conectado = this;
