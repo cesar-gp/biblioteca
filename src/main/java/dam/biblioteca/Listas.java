@@ -16,6 +16,8 @@ package dam.biblioteca;
  */
 public final class Listas {
 
+	// Constructor
+
 	/**
 	 *	Constructor privado que impide que se cree
 	 *	ninguna instancia de la clase.
