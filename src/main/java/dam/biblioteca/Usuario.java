@@ -19,7 +19,7 @@ public class Usuario {
 
 	// Constantes
 
-	private static Usuario ROOT = new Usuario("root", "", true);
+	private static Usuario ROOT = new Usuario("root", null, true);
 
 	// Propiedades estáticas
 
@@ -61,7 +61,7 @@ public class Usuario {
 		// Buscar índice del usuario en la lista.
 		int indice = -1;
 		for(int i = 0; i < lista.length && indice == -1; i++)
-			if(lista[i].nombre == this.nombre) indice = i;
+			if(lista[i].nombre.equalsIgnoreCase(this.nombre)) indice = i;
 
 		// Devolver su índice (-1 si no está en la lista).
 		return indice;
@@ -85,7 +85,7 @@ public class Usuario {
 	 */
 	public static Usuario getUsuario(String nombre) {
 		for(int i = 0; i < lista.length; i++)
-			if(lista[i].nombre.equals(nombre))
+			if(lista[i].nombre.equalsIgnoreCase(nombre))
 				return lista[i];
 
 		return null;
@@ -130,6 +130,15 @@ public class Usuario {
 		return this.getIndice() != -1;
 	}
 
+	/**
+	 *	Devuelve si el usuario tiene contraseña o no.
+	 * 
+	 *	@return Si el usuario tiene contraseña o no.
+	 */
+	public boolean tieneContrasena() {
+		return this.contrasena != null;
+	}
+
 	// Funciones
 
 	/**
@@ -155,9 +164,13 @@ public class Usuario {
 		// ¿No caben más usuarios? Operación cancelada.
 		if(lista.length == Integer.MAX_VALUE) return false;
 
+		// ¿El nombre es nulo o está vacío? Operación cancelada.
+		if(in.nombre == null || in.nombre.isEmpty() || in.nombre.isBlank())
+			return false;
+
 		// ¿El usuario ya está registrado? Operación cancelada.
 		for(int i = 0; i < lista.length; i++)
-			if(lista[i].nombre == in.nombre) return false;
+			if(lista[i].nombre.equalsIgnoreCase(in.nombre)) return false;
 
 		// Crear copia de la lista de usuarios con un hueco extra.
 		Usuario[] copia = new Usuario[lista.length + 1];
@@ -173,42 +186,6 @@ public class Usuario {
 		lista = copia;
 
 		// Operación realizada.
-		return true;
-	}
-
-	/**
-	 *	<p>
-	 *		Conecta al usuario a la sesión actual.
-	 *	</p>
-	 *	<p>
-	 *		La operación <strong>no se realizará</strong> en
-	 *		ninguno de estos escenarios:
-	 *	</p>
-	 *	<ul>
-	 *		<li>Hay un usuario ya conectado.</li>
-	 *		<li>El usuario a conectar no está registrado.</li>
-	 *		<li>La contraseña introducida es incorrecta.</li>
-	 *	</ul>
-	 *	<p>
-	 *		En cualquier otro caso, se realizará sin problema.
-	 *	</p>
-	 *
-	 *	@param	contrasena	Contraseña del usuario
-	 * 
-	 *	@return	Si se ha realizado la operación o no.
-	 */
-	public boolean conectar(String contrasena) {
-		// ¿Hay un usuario ya conectado? Operación cancelada.
-		if(conectado != null) return false;
-
-		// ¿El usuario no está registrado? Operación cancelada.
-		if(!this.isRegistrado()) return false;
-
-		// ¿Contraseña incorrecta? Operación cancelada.
-		if(!this.contrasena.equals(contrasena)) return false;
-
-		// Realizar operación.
-		conectado = this;
 		return true;
 	}
 
@@ -249,7 +226,7 @@ public class Usuario {
 	public static boolean eliminar(Usuario in) {
 		// ¿Permiso denegado? Operación cancelada.
 		if(conectado == null ||
-			(!in.nombre.equals(conectado.nombre) && !conectado.admin))
+			(!in.nombre.equalsIgnoreCase(conectado.nombre) && !conectado.admin))
 			return false;
 
 		// ¿El usuario no está registrado? Operación cancelada.
@@ -257,10 +234,10 @@ public class Usuario {
 		if(indice == -1) return false;
 
 		// ¿El usuario a eliminar es ROOT? Operación cancelada.
-		if(in.nombre.equals(ROOT.nombre)) return false;
+		if(in.nombre.equalsIgnoreCase(ROOT.nombre)) return false;
 
 		// Cerrar sesión en la cuenta a eliminar, si procede.
-		if(conectado.nombre.equals(in.nombre)) desconectar();
+		if(conectado.nombre.equalsIgnoreCase(in.nombre)) desconectar();
 
 		// Crear copia de la lista sin el elemento de ese indice.
 		Usuario[] copia = new Usuario[lista.length - 1];
@@ -295,7 +272,7 @@ public class Usuario {
 	public static boolean cambiarNombre(String newNombre) {
 		// ¿Permiso denegado? Operación cancelada.
 		if(conectado == null ||
-			conectado.nombre.equals(ROOT.nombre))
+			conectado.nombre.equalsIgnoreCase(ROOT.nombre))
 			return false;
 
 		// ¿El nuevo nombre ya está cogido? Operación cancelada.
@@ -332,5 +309,58 @@ public class Usuario {
 
 		// Operación realizada.
 		return true;
+	}
+
+	/**
+	 *	<p>
+	 *		Conecta al usuario a la sesión actual.
+	 *	</p>
+	 *	<p>
+	 *		La operación <strong>no se realizará</strong> en
+	 *		ninguno de estos escenarios:
+	 *	</p>
+	 *	<ul>
+	 *		<li>Hay un usuario ya conectado.</li>
+	 *		<li>El usuario a conectar no está registrado.</li>
+	 *		<li>La contraseña introducida es incorrecta.</li>
+	 *	</ul>
+	 *	<p>
+	 *		En cualquier otro caso, se realizará sin problema.
+	 *	</p>
+	 *
+	 *	@param	contrasena	Contraseña del usuario
+	 * 
+	 *	@return	Si se ha realizado la operación o no.
+	 */
+	public boolean conectar(String contrasena) {
+		// ¿Hay un usuario ya conectado? Operación cancelada.
+		if(conectado != null) return false;
+
+		// ¿El usuario no está registrado? Operación cancelada.
+		if(!this.isRegistrado()) return false;
+
+		// ¿Contraseña incorrecta? Operación cancelada.
+		if((this.contrasena == null && contrasena != null) &&
+			(this.contrasena != null && contrasena == null) &&
+			(this.contrasena != null && !this.contrasena.equals(contrasena)))
+			return false;
+
+		// Realizar operación.
+		conectado = this;
+		return true;
+	}
+
+	/**
+	 *	Devuelve el nombre del usuario y, si es administrador,
+	 *	incluye un texto que lo indica.
+	 * 
+	 *	@return	Representación del objeto como String
+	 */
+	@Override
+	public String toString() {
+		String out = this.nombre;
+		if(this.admin) out += " (administrador)";
+
+		return out;
 	}
 }

@@ -4,7 +4,7 @@ public class Libro {
 
 	// Propiedades estáticas
 
-	private static Libro[] lista;
+	private static Libro[] lista = new Libro[0];
 	
 	// Propiedades no estáticas
 
@@ -23,6 +23,10 @@ public class Libro {
 	}
 
 	// Getters
+
+	public static Libro[] getLibros() {
+		return lista;
+	}
 
 	public String getNombre() {
 		return this.nombre;

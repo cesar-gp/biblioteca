@@ -4,7 +4,7 @@ public class Prestamo {
 
 	// Propiedades estáticas
 
-	private static Prestamo[] lista;
+	private static Prestamo[] lista = new Prestamo[0];
 
 	// Propiedades no estáticas
 
@@ -21,6 +21,10 @@ public class Prestamo {
 	}
 
 	// Getters
+
+	public static Prestamo[] getPrestamos() {
+		return lista;
+	}
 
 	public Usuario getUsuario() {
 		return this.usuario;
