@@ -65,4 +65,35 @@ public class Sesion {
 		this.usuario = null;
 		return 0;
 	}
+
+	/**
+	 *	<p>
+	 *		Devuelve una representación de la sesión
+	 *		como String, que consiste en el nombre del
+	 *		usuario entre corchetes y un símbolo que
+	 *		indica si es administrador o usuario.
+	 *	</p>
+	 *	<ul>
+	 *		<li>
+	 *			{@code $}: representa a un usuario sin
+	 *			permisos de administrador.
+	 *		</li>
+	 *		<li>
+	 *			{@code #}: representa a un administrador.
+	 *		</li>
+	 *		<li>
+	 *			{@code /}: representa una sesión en un
+	 *			estado inválido (sin usuario, pero abierta).
+	 *		</li>
+	 *	</ul>
+	 */
+	@Override
+	public String toString() {
+		if(this.usuario == null) return "/";
+
+		char simbolo = '$';
+		if(this.usuario.isAdmin()) simbolo = '#';
+
+		return '[' + this.usuario.getNombre() + ']' + simbolo;
+	}
 }
