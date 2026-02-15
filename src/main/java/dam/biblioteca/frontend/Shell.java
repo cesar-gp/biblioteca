@@ -4,6 +4,7 @@ import dam.biblioteca.backend.Usuario;
 import dam.biblioteca.backend.Libro;
 import dam.biblioteca.backend.Prestamo;
 import dam.biblioteca.backend.Sesion;
+import java.util.Scanner;
 
 /**
  *	<p>
@@ -21,6 +22,10 @@ import dam.biblioteca.backend.Sesion;
  *	@version	0
  */
 public class Shell {
+	
+	// Constantes
+	
+	private static final Scanner SCANNER = new Scanner(System.in);
 
 	// Propiedades no estáticas
 
@@ -75,9 +80,15 @@ public class Shell {
 		// Mostrar mensaje.
 		System.out.print(msg);
 
-		// Recibir respuesta, ocultándola si procede.
-		if(ocultar) return new String(System.console().readPassword());
-		else return System.console().readLine();
+		// Leer respuesta del usuario usando System.console()
+		// si es posible, porque puede ocultar los caracteres
+		// escritos por el usuario.
+		if(System.console() == null) {
+			return SCANNER.nextLine();
+		} else {
+			if(ocultar) return new String(System.console().readPassword());
+			else return System.console().readLine();
+		}
 	}
 
 	/**
@@ -651,5 +662,7 @@ public class Shell {
 				abierta = ejecutar(respuesta("\n" + this.sesion + " ", false));
 			}
 		}
+		
+		SCANNER.close();
 	}
 }
