@@ -3,11 +3,18 @@ package dam.biblioteca.frontend;
 import dam.biblioteca.backend.Usuario;
 import dam.biblioteca.backend.Libro;
 import dam.biblioteca.backend.Prestamo;
+import dam.biblioteca.backend.Sesion;
 
 /**
- *	Implementación de una <em>shell</em>, un programa
- *	en el que el usuario introduce comandos y recibe
- *	una respuesta del programa.
+ *	<p>
+ *		Implementación de una <em>shell</em>, un programa
+ *		en el que el usuario introduce comandos y recibe
+ *		una respuesta del programa.
+ *	</p>
+ *	<p>
+ *		La shell solo podrá tener una sesión abierta, y
+ *		no varias a la vez.
+ *	</p>
  * 
  *	@author		Rubén Benítez Soler
  *	@author		César Gutiérrez Pérez
@@ -18,11 +25,13 @@ public class Shell {
 	// Propiedades no estáticas
 
 	private boolean abierta;
+	private Sesion sesion;
 
-	// Constructor
+	// Constructores
 
 	public Shell() {
 		this.abierta = false;
+		this.sesion = new Sesion();
 	}
 
 	// Getters
@@ -36,7 +45,16 @@ public class Shell {
 		return this.abierta;
 	}
 
-	// Funciones
+	/**
+	 *	Devuelve la sesión actual.
+	 * 
+	 *	@return	Sesión actual
+	 */
+	public Sesion getSesion() {
+		return this.sesion;
+	}
+
+	// Funciones: lectura de respuestas del usuario.
 
 	/**
 	 *	<p>
@@ -158,20 +176,329 @@ public class Shell {
 		else return out;
 	}
 
+	// Funciones: código compartido entre comandos.
+
+	private boolean comprobarPermisos() {
+		if(!this.sesion.getUsuario().isAdmin()) {
+			System.out.println("Error: permiso denegado.");
+			return false;
+		}
+
+		return true;
+	}
+
+	private void tipoIncorrecto() {
+		System.out.println("Error: tipo de dato desconocido.");
+		System.out.println("Valores válidos: usuario, libro, prestamo.");
+	}
+
+	// Funciones: código ejecutable a través de comandos.
+
+	private void list(String[] argv) {
+		// ¿El usuario no es administrador? Error.
+		if(!comprobarPermisos()) return;
+
+		// Especificar tipo a listar, o cogerlo
+		// del primer argumento si existe.
+		String tipo;
+		if(argv.length < 2) tipo = respuesta("Tipo [usuario/libro/prestamo]: ", false);
+		else tipo = argv[1];
+
+		switch(tipo) {
+			case "u":
+			case "usuario":
+			case "usuarios":
+				// Mostrar lista de usuarios.
+				System.out.println(Listas.lista(Usuario.getUsuarios(), true));
+				break;
+			case "l":
+			case "libro":
+			case "libros":
+				// Mostrar lista de libros.
+				System.out.println(Listas.lista(Libro.getLibros(), true));
+				break;
+			case "p":
+			case "prestamo":
+			case "prestamos":
+				// Mostrar lista de préstamos.
+				System.out.println(Listas.lista(Prestamo.getPrestamos(), true));
+				break;
+			default:
+				// ¿Otro tipo? Error.
+				tipoIncorrecto();
+				break;
+		}
+	}
+
+	private void register(String[] argv) {
+		// ¿El usuario no es administrador? Error.
+		if(!comprobarPermisos()) return;
+
+		// Especificar tipo a registrar, o cogerlo
+		// del primer argumento si existe.
+		String tipo;
+		if(argv.length < 2) tipo = respuesta("Tipo [usuario/libro/prestamo]: ", false);
+		else tipo = argv[1];
+
+		switch(tipo) {
+			case "u":
+			case "usuario":
+				// Especificar nombre del usuario, o cogerlo
+				// del segundo argumento si existe. 
+				String nombre;
+				if(argv.length < 3) nombre = respuesta("Nombre: ", false);
+				else nombre = argv[2];
+
+				// Especificar contraseña del usuario, o cogerla
+				// del tercer argumento si existe.
+				String contrasena;
+				if(argv.length < 4) contrasena = respuesta("Contraseña: ", true);
+				else contrasena = argv[3];
+
+				// Si la contraseña está vacía, asignarle un
+				// valor nulo (no tiene contraseña).
+				if(contrasena.isEmpty() || contrasena.isBlank())
+					contrasena = null;
+
+				// Especificar si tiene permisos de administrador,
+				// o coger la respuesta del cuarto argumento,
+				// si existe.
+				Boolean administrador;
+				if(argv.length < 5) administrador = respuestaBinaria("¿Dar permisos de administrador?", false);
+				else administrador = stringABoolean(argv[4], false);
+
+				if(administrador == null) {
+					administrador = respuestaBinaria("¿Dar permisos de administrador?", false);
+				}
+
+				// Intentar registrar al usuario y mostrar
+				// mensaje indicando si se ha realizado la operación.
+				switch(Usuario.registrar(nombre, contrasena, administrador)) {
+					case 0:
+						System.out.print("Se ha registrado el usuario '" + nombre + "'");
+						if(administrador) System.out.print(" con permisos de administrador");
+						System.out.println('.');
+						break;
+					case 1:
+						System.out.println("Error: se ha alcanzado el máximo de usuarios.");
+						break;
+					case 2:
+						System.out.println("Error: no se admiten nombres nulos o vacíos.");
+						break;
+					case 3:
+						System.out.println("Error: el usuario '" + nombre + "' ya está registrado.");
+						break;
+					default:
+						System.out.println("Error: ha ocurrido un error desconocido al registrar al usuario.");
+						break;
+				}
+
+				break;
+			case "l":
+			case "libro":
+				// Registrar libro. No soportado.
+				break;
+			case "p":
+			case "prestamo":
+				// Registrar préstamo. No soportado.
+				break;
+			default:
+				// ¿Otro tipo? Error.
+				tipoIncorrecto();
+				break;
+		}
+	}
+
+	private void remove(String[] argv) {
+		// ¿El usuario no es administrador? Pedirle
+		// confirmación para borrar su propio usuario.
+		boolean propia = false;
+		if(!this.sesion.getUsuario().isAdmin()) {
+			propia = respuestaBinaria("Este comando eliminará tu propio usuario, ¿quieres continuar?", false);
+			if(!propia) return;
+		}
+
+		// Especificar tipo a borrar:
+		//  - Si no es administrador, borrará su propio usuario.
+		//  - Si lo es, pedir el tipo o cogerlo del primer argumento.
+		String tipo;
+		if(propia) tipo = "usuario";
+		else if(argv.length < 2) tipo = respuesta("Tipo [usuario/libro/prestamo]: ", false);
+		else tipo = argv[1];
+
+		switch(tipo) {
+			case "u":
+			case "usuario":
+				String nombre;
+
+				if(propia) nombre = this.sesion.getUsuario().getNombre();
+				else if(argv.length < 3) nombre = respuesta("Nombre: ", false);
+				else nombre = argv[2];
+
+				Usuario objetivo;
+				if(propia) objetivo = this.sesion.getUsuario();
+				else objetivo = Usuario.getUsuario(nombre);
+
+				if(objetivo == null) {
+					System.out.println("Error: el usuario introducido no existe.");
+					break;
+				}
+
+				if(objetivo.tieneContrasena()) {
+					String contrasena = respuesta("Contraseña de la cuenta a eliminar: ", true);
+					if(!objetivo.tieneContrasena(contrasena)) {
+						System.out.println("Error: contraseña incorrecta.");
+						break;
+					}
+				}
+
+				switch(objetivo.eliminar()) {
+					case 0:
+						System.out.println("Se ha eliminado el usuario '" + objetivo.getNombre() + "'.");
+
+						if(this.sesion.getUsuario() == objetivo) {
+							this.sesion.cerrar();
+							System.out.println("Se ha cerrado la sesión.");
+						}
+
+						break;
+					case 1:
+						System.out.println("Error: el usuario no está registrado.");
+						break;
+					case 2:
+						System.out.println("Error: no se puede eliminar el usuario root.");
+						break;
+					default:
+						System.out.println("Error: ha ocurrido un error desconocido al intentar eliminar el usuario.");
+						break;
+				}
+
+				break;
+			case "l":
+			case "libro":
+				break;
+			case "p":
+			case "prestamo":
+				break;
+			default:
+				tipoIncorrecto();
+				break;
+		}
+	}
+
+	private void set(String[] argv) {
+		String campo;
+		if(argv.length < 2) campo = respuesta("Campo [nombre/contraseña/rol]: ", false);
+		else campo = argv[1];
+
+		String valor;
+
+		switch(campo) {
+			case "n": case "nom": case "nombre":
+				if(argv.length < 3) valor = respuesta("Nuevo nombre: ", false);
+				else valor = argv[2];
+
+				if(this.sesion.getUsuario().setNombre(valor))
+					System.out.println("Nombre cambiado.");
+				else
+					System.out.println("Error: el nombre ya está cogido.");
+
+				break;
+			case "c": case "con": case "contraseña":
+				if(argv.length < 3) valor = respuesta("Nueva contraseña: ", true);
+				else valor = argv[2];
+
+				if(this.sesion.getUsuario().setContrasena(valor)) {
+					System.out.println("Contraseña cambiada.");
+
+					this.sesion.cerrar();
+					System.out.println("Se ha cerrado la sesión.");
+				} else {
+					System.out.println("Error: ya tienes esa contraseña.");
+				}
+				
+				break;
+			case "r": case "rol":
+				if(!comprobarPermisos()) return;
+
+				if(argv.length < 3) valor = respuesta("Nuevos permisos [administrador/usuario]: ", false);
+				else valor = argv[2];
+
+				boolean newAdmin;
+				switch(valor) {
+					case "a": case "admin": case "administrador":
+						newAdmin = true;
+						break;
+					case "u": case "usuario":
+						newAdmin = false;
+						break;
+					default:
+						System.out.println("Error: rol no reconocido.");
+						System.out.println("Valores válidos: usuario, administrador.");
+						return;
+				}
+
+				String nombre;
+				if(argv.length < 4) nombre = respuesta("Usuario: ", false);
+				else nombre = argv[3];
+
+				Usuario usuario = Usuario.getUsuario(nombre);
+				if(usuario == null) {
+					System.out.println("Error: el usuario '" + nombre + "' no existe.");
+					return;
+				}
+
+				switch(usuario.setAdmin(newAdmin)) {
+					case 0:
+						String rol = "administrador";
+						if(!newAdmin) rol = "usuario";
+
+						System.out.println("El usuario '" + usuario.getNombre() + "' ahora es " + rol + ".");
+						break;
+					case 1:
+						System.out.println("Error: no se puede modificar el rol del usuario root.");
+						break;
+					case 2:
+						System.out.println("Error: el usuario '" + usuario.getNombre() + "' ya tiene asignado ese rol.");
+						break;
+				}
+
+				break;
+			default:
+				System.out.println("Error: campo no reconocido.");
+				System.out.println("Valores válidos: nombre, contraseña, rol.");
+				break;
+		}
+	}
+
+	private void logout() {
+		switch(this.sesion.cerrar()) {
+			case 0:
+				System.out.println("Sesión cerrada.");
+				break;
+			case 1:
+				System.out.println("Error: no hay ningún usuario conectado.");
+				break;
+			default:
+				System.out.println("Error: ha ocurrido un error desconocido al cerrar sesión.");
+				break;
+		}
+	}
+
 	/**
-	 *	Devuelve un mensaje de ayuda con la lista de comandos
-	 *	y sus descripciones.
-	 * 
-	 *	@param	admin	Si el usuario que recibe el mensaje
-	 *					es administrador o no.
-	 * 
-	 *	@return	Mensaje de ayuda.
+	 *	<p>
+	 *		Función del comando {@code help}.
+	 *	</p>
+	 *	<p>
+	 *		Muestra un mensaje de ayuda con la
+	 *		lista de comandos y sus descripciones.
+	 *	</p>
 	 */
-	private static String ayuda(boolean admin) {
+	private void help() {
 		// Crear texto vacío.
 		String out = "";
 
-		if(admin) {
+		if(this.sesion.getUsuario().isAdmin()) {
 			// Añadir descripciones únicas para administradores.
 			out +=
 				" - list\n" +
@@ -182,12 +509,18 @@ public class Shell {
 				"\n" +
 				" - remove\n" +
 				"   [Administrador] Elimina usuarios, libros o préstamos.\n" +
+				"\n" +
+				" - set\n" +
+				"   Cambia tu nombre, tu contraseña o el rol de cualquier usuario.\n" +
 				"\n";
 		} else {
 			// Añadir descripciones únicas para no administradores.
 			out +=
 				" - remove\n" +
 				"   Elimina tu propio usuario.\n" +
+				"\n" +
+				" - set\n" +
+				"   Cambia tu nombre o tu contraseña.\n" +
 				"\n";
 		}
 
@@ -202,275 +535,47 @@ public class Shell {
 			" - exit\n" +
 			"   Cierra el programa.";
 
-		// Devolver texto completo.
-		return out;
+		// Mostrar texto completo.
+		System.out.println(out);
 	}
+
+	// Funciones: funcionalidad básica de la shell.
 
 	/**
 	 *	Recibe un comando, lo separa por argumentos y
 	 *	ejecuta su función.
 	 * 
-	 *	@param	cmd	Comando recibido, con todos sus argumentos.
+	 *	@param	cmd	Comando recibido, con todos sus
+	 *				argumentos
 	 * 
-	 *	@return	Si la shell debe seguir abierta tras la ejecución.
+	 *	@return	Si la shell debe seguir abierta tras
+	 *			la ejecución
 	 */
 	private boolean ejecutar(String cmd) {
 		// Separar el comando en argumentos.
 		String[] argv = cmd.split(" ");
 
-		// ¿Ejecución sin usuario? Cerrar la shell.
-		Usuario actual = Usuario.getUsuarioConectado();
-		if(actual == null) {
-			System.out.println("Error: no puedes ejecutar comandos sin haber iniciado sesión.");
-			System.out.println("       Por seguridad, se cerrará el programa a continuación.");
-			return false;
-		}
-
 		// Ver qué comando quiere ejecutar el usuario.
 		switch(argv[0]) {
-			case "l":
-			case "ls":
-			case "list":
-				// list: Listar usuarios, libros o préstamos.
-
-				// ¿El usuario no es administrador? Error.
-				if(!actual.isAdmin()) {
-					System.out.println("Error: este comando solo puede ser ejecutado por un administrador.");
-					break;
-				}
-
-				// Especificar tipo a listar, o cogerlo
-				// del primer argumento si existe.
-				String tipo;
-				if(argv.length < 2) tipo = respuesta("Tipo [usuario/libro/prestamo]: ", false);
-				else tipo = argv[1];
-
-				switch(tipo) {
-					case "u":
-					case "usuario":
-					case "usuarios":
-						// Mostrar lista de usuarios.
-						System.out.println(Listas.lista(Usuario.getUsuarios(), true));
-						break;
-					case "l":
-					case "libro":
-					case "libros":
-						// Mostrar lista de libros.
-						System.out.println(Listas.lista(Libro.getLibros(), true));
-						break;
-					case "p":
-					case "prestamo":
-					case "prestamos":
-						// Mostrar lista de préstamos.
-						System.out.println(Listas.lista(Prestamo.getPrestamos(), true));
-						break;
-					default:
-						// ¿Otro tipo? Error.
-						System.out.println("Error: tipo de dato desconocido.");
-						System.out.println("Valores válidos: usuarios, libros, prestamos.");
-						break;
-				}
-
+			case "l": case "ls": case "list":
+				this.list(argv);
 				break;
-			case "r":
-			case "reg":
-			case "register":
-				// register: Registrar usuarios, libros y préstamos.
-
-				// ¿El usuario no es administrador? Error.
-				if(!actual.isAdmin()) {
-					System.out.println("Error: este comando solo puede ser ejecutado por un administrador.");
-					break;
-				}
-
-				// Especificar tipo a registrar, o cogerlo
-				// del primer argumento si existe.
-				if(argv.length < 2) tipo = respuesta("Tipo [usuario/libro/prestamo]: ", false);
-				else tipo = argv[1];
-
-				switch(tipo) {
-					case "u":
-					case "usuario":
-						// Especificar nombre del usuario, o cogerlo
-						// del segundo argumento si existe. 
-						String nombre;
-						if(argv.length < 3) nombre = respuesta("Nombre: ", false);
-						else nombre = argv[2];
-
-						// Especificar contraseña del usuario, o cogerla
-						// del tercer argumento si existe.
-						String contrasena;
-						if(argv.length < 4) contrasena = respuesta("Contraseña: ", true);
-						else contrasena = argv[3];
-
-						// Si la contraseña está vacía, asignarle un
-						// valor nulo (no tiene contraseña).
-						if(contrasena.isEmpty() || contrasena.isBlank())
-							contrasena = null;
-
-						// Especificar si tiene permisos de administrador,
-						// o coger la respuesta del cuarto argumento,
-						// si existe.
-						Boolean administrador;
-						if(argv.length < 5) administrador = respuestaBinaria("¿Dar permisos de administrador?", false);
-						else administrador = stringABoolean(argv[4], false);
-
-						if(administrador == null) {
-							administrador = respuestaBinaria("¿Dar permisos de administrador?", false);
-						}
-
-						// Intentar registrar al usuario y mostrar
-						// mensaje indicando si se ha realizado la operación.
-						switch(Usuario.registrar(nombre, contrasena, administrador)) {
-							case 0:
-								System.out.print("Se ha registrado el usuario '" + nombre + "'");
-								if(administrador) System.out.print(" con permisos de administrador");
-								System.out.println('.');
-								break;
-							case 1:
-								System.out.println("Error: permiso denegado.");
-								break;
-							case 2:
-								System.out.println("Error: se ha alcanzado el máximo de usuarios.");
-								break;
-							case 3:
-								System.out.println("Error: no se admiten nombres nulos o vacíos.");
-								break;
-							case 4:
-								System.out.println("Error: el usuario '" + nombre + "' ya está registrado.");
-								break;
-							default:
-								System.out.println("Error: ha ocurrido un error desconocido al registrar al usuario.");
-								break;
-						}
-
-						break;
-					case "l":
-					case "libro":
-						// Registrar libro. No soportado.
-						break;
-					case "p":
-					case "prestamo":
-						// Registrar préstamo. No soportado.
-						break;
-					default:
-						// ¿Otro tipo? Error.
-						System.out.println("Error: tipo de dato desconocido.");
-						System.out.println("Valores válidos: usuario, libro, prestamo.");
-						break;
-				}
-
+			case "r": case "reg": case "register":
+				this.register(argv);
 				break;
-			case "d":
-			case "del":
-			case "rem":
-			case "delete":
-			case "remove":
-				// delete/remove: Eliminar usuarios, libros o préstamos.
-
-				// ¿El usuario no es administrador? Pedirle confirmación
-				// para borrar su propio usuario.
-				boolean propia = false;
-				if(!actual.isAdmin()) {
-					propia = respuestaBinaria("Este comando eliminará tu propio usuario, ¿quieres continuar?", false);
-					if(!propia) break;
-				}
-
-				// Especificar tipo a borrar:
-				//  - Si no es administrador, borrará su propio usuario.
-				//  - Si lo es, pedir el tipo o cogerlo del primer argumento.
-				if(propia) tipo = "usuario";
-				else if(argv.length < 2) tipo = respuesta("Tipo [usuario/libro/prestamo]: ", false);
-				else tipo = argv[1];
-
-				switch(tipo) {
-					case "u":
-					case "usuario":
-						String nombre;
-
-						if(propia) nombre = actual.getNombre();
-						else if(argv.length < 3) nombre = respuesta("Nombre: ", false);
-						else nombre = argv[2];
-
-						Usuario objetivo;
-						if(propia) objetivo = actual;
-						else objetivo = Usuario.getUsuario(nombre);
-
-						if(objetivo == null) {
-							System.out.println("Error: el usuario introducido no existe.");
-							break;
-						}
-
-						if(objetivo.tieneContrasena()) {
-							String contrasena = respuesta("Contraseña de la cuenta a eliminar: ", true);
-							if(!actual.tieneContrasena(contrasena)) {
-								System.out.println("Error: contraseña incorrecta.");
-								break;
-							}
-						}
-
-						switch(Usuario.eliminar(nombre)) {
-							case 0:
-								if(nombre.equalsIgnoreCase(actual.getNombre())) {
-									System.out.println("Se ha eliminado tu usuario.");
-									System.out.println("En consecuencia, también se ha cerrado la sesión.");
-								} else {
-									System.out.println("Se ha eliminado el usuario con el nombre '" + objetivo.getNombre() + "'.");
-								}
-								break;
-							case 1:
-								System.out.println("Error: no existen usuarios con nombre nulo o vacío.");
-								break;
-							case 2:
-								System.out.println("Error: permiso denegado.");
-								break;
-							case 3:
-								System.out.println("Error: el usuario '" + nombre + "' no está registrado.");
-								break;
-							case 4:
-								System.out.println("Error: no se puede eliminar el usuario 'root'.");
-								break;
-							default:
-								break;
-						}
-
-						break;
-					case "l":
-					case "libro":
-						break;
-					case "p":
-					case "prestamo":
-						break;
-					default:
-						System.out.println("Error: tipo de dato desconocido.");
-						System.out.println("Valores válidos: usuario, libro, prestamo.");
-						break;
-				}
-
+			case "d": case "del": case "rem": case "delete": case "remove":
+				this.remove(argv);
 				break;
-			case "h":
-			case "?":
-			case "help":
-				System.out.println(ayuda(actual.isAdmin()));
+			case "h": case "?": case "help":
+				this.help();
 				break;
-			case "o":
-			case "out":
-			case "logout":
-				switch(Usuario.desconectar()) {
-					case 0:
-						System.out.println("Sesión cerrada.");
-						break;
-					case 1:
-						System.out.println("Error: no hay ningún usuario conectado.");
-						break;
-					default:
-						System.out.println("Error: ha ocurrido un error desconocido al cerrar sesión.");
-						break;
-				}
+			case "s": case "set":
+				this.set(argv);
 				break;
-			case "x":
-			case "ex":
-			case "exit":
+			case "o": case "out": case "logout":
+				this.logout();
+				break;
+			case "x": case "ex": case "exit":
 				return false;
 			default:
 				System.out.println("Error: no se reconoce '" + argv[0] + "' como comando.");
@@ -501,8 +606,9 @@ public class Shell {
 		System.out.println("--");
 
 		while(abierta) {
-			Usuario actual = Usuario.getUsuarioConectado();
-			if(actual == null) {
+			Usuario con = this.sesion.getUsuario();
+
+			if(con == null) {
 				// Pedir nombre de usuario.
 				String nombre = respuesta("\nUsuario: ", false);
 
@@ -512,48 +618,42 @@ public class Shell {
 					break;
 				}
 
-				// Conseguir usuario, si existe.
-				actual = Usuario.getUsuario(nombre);
+				// Conseguir datos del usuario con ese nombre.
+				con = Usuario.getUsuario(nombre);
 
-				// Pedir contraseña
-				// (si el usuario existe y no tiene contraseña, no pedirla).
+				// Pedir su contraseña, si procede.
 				String contrasena = null;
-				if(actual == null || actual.tieneContrasena())
-					contrasena = respuesta("\nContraseña: ", true);
+				if(con == null || con.tieneContrasena())
+					contrasena = respuesta("Contraseña: ", true);
 
-				// Mostrar mensaje de bienvenida o de error.
-				System.out.println("\n--");
-				switch(Usuario.conectar(nombre, contrasena)) {
+				// En cualquier otro caso, intentar abrir sesión.
+				switch(this.sesion.abrir(con, contrasena)) {
 					case 0:
-						System.out.println("¡Bienvenido a la biblioteca, " + actual.getNombre() + "! <3");
+						System.out.println("\n¡Bienvenido a la biblioteca, " + con.getNombre() + "! <3");
 						System.out.println("Pon 'help' para ver la lista de comandos.");
-						if(actual.isAdmin()) {
+						if(con.isAdmin()) {
 							System.out.println("\nTienes permisos de administrador, revisa bien");
 							System.out.println("lo que escribes antes de ejecutarlo.");
 						}
 						break;
 					case 1:
-						System.out.println("Error: ya hay un usuario conectado.");
+						System.out.println("\nError: ya hay un usuario conectado.");
 						break;
 					case 2:
-						System.out.println("Error: no hay usuarios con nombres nulos o vacíos.");
-						break;
 					case 3:
-					case 4:
-						System.out.println("Error: nombre o contraseña incorrectos.");
+						System.out.println("\nError: nombre o contraseña incorrectos.");
 						break;
 					default:
-						System.out.println("Error: ha ocurrido un error desconocido al iniciar sesión.");
+						System.out.println("\nError: ha ocurrido un error desconocido al iniciar sesión.");
 						break;
 				}
-				System.out.println("--");
 
 				continue;
 			}
 
 			char simbolo = '$';
-			if(actual != null && actual.isAdmin()) simbolo = '#';
-			abierta = ejecutar(respuesta("\n[" + actual.getNombre() + ']' + simbolo + " ", false));
+			if(con.isAdmin()) simbolo = '#';
+			abierta = ejecutar(respuesta("\n[" + con.getNombre() + ']' + simbolo + " ", false));
 		}
 	}
 }
