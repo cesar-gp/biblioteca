@@ -344,14 +344,6 @@ public class Shell {
 					break;
 				}
 
-				if(objetivo.tieneContrasena()) {
-					String contrasena = respuesta("Contraseña de la cuenta a eliminar: ", true);
-					if(!objetivo.tieneContrasena(contrasena)) {
-						System.out.println("Error: contraseña incorrecta.");
-						break;
-					}
-				}
-
 				switch(objetivo.eliminar()) {
 					case 0:
 						System.out.println("Se ha eliminado el usuario '" + objetivo.getNombre() + "'.");
@@ -551,9 +543,14 @@ public class Shell {
 	 *	@return	Si la shell debe seguir abierta tras
 	 *			la ejecución
 	 */
-	private boolean ejecutar(String cmd) {
+	public boolean ejecutar(String cmd) {
 		// Separar el comando en argumentos.
 		String[] argv = cmd.split(" ");
+
+		if(this.sesion.getUsuario() == null) {
+			System.out.println("Error crítico: sesión inválida.");
+			return false;
+		}
 
 		// Ver qué comando quiere ejecutar el usuario.
 		switch(argv[0]) {
@@ -647,13 +644,12 @@ public class Shell {
 						System.out.println("\nError: ha ocurrido un error desconocido al iniciar sesión.");
 						break;
 				}
-
-				continue;
+			} else {
+				// Pedir comando al usuario, ejecutar lo que responda
+				// y decidir si la shell sigue abierta en función del
+				// valor devuelto por la función ejecutada.
+				abierta = ejecutar(respuesta("\n" + this.sesion + " ", false));
 			}
-
-			char simbolo = '$';
-			if(con.isAdmin()) simbolo = '#';
-			abierta = ejecutar(respuesta("\n[" + con.getNombre() + ']' + simbolo + " ", false));
 		}
 	}
 }
