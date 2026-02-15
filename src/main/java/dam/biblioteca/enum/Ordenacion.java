@@ -1,4 +1,4 @@
-package dam.biblioteca;
+package dam.biblioteca.enums;
 
 public enum Ordenacion {
 	ASCENDENTE,

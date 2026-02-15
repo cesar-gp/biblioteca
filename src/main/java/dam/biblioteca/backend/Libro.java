@@ -1,4 +1,6 @@
-package dam.biblioteca;
+package dam.biblioteca.backend;
+
+import dam.biblioteca.enums.Categoria;
 	
 public class Libro {
 

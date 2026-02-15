@@ -1,4 +1,4 @@
-package dam.biblioteca;
+package dam.biblioteca.backend;
 
 /**
  *	<p>
@@ -17,13 +17,12 @@ package dam.biblioteca;
  */
 public class Usuario {
 
-	// Constantes
-
-	private static Usuario ROOT = new Usuario("root", null, true);
-
 	// Propiedades estáticas
 
-	private static Usuario[] lista = new Usuario[] { ROOT };
+	private static Usuario[] lista = new Usuario[] {
+		new Usuario("root", null, true)
+	};
+
 	private static Usuario conectado = null;
 
 	// Propiedades no estáticas
@@ -35,14 +34,23 @@ public class Usuario {
 	// Constructor
 
 	/**
-	 *	Crea un usuario y le asigna un nombre y una contraseña y
-	 *	le otorga, opcionalmente, permisos de administrador.
+	 *	<p>
+	 *		Crea un usuario y le asigna un nombre y una
+	 *		contraseña y le otorga, opcionalmente, permisos
+	 *		de administrador.
+	 *	</p>
+	 *	<p>
+	 *		El constructor es privado. Para crear nuevos
+	 *		usuarios se debe usar la función
+	 *		{@link #registrar(String, String, boolean)}.
+	 *		Así se evita que existan usuarios no registrados.
+	 *	</p>
 	 * 
 	 *	@param	nombre		Nombre del usuario
 	 *	@param	contrasena	Contraseña del usuario
 	 *	@param	admin		Si es administrador o no
 	 */
-	public Usuario(String nombre, String contrasena, boolean admin) {
+	private Usuario(String nombre, String contrasena, boolean admin) {
 		// Asignar propiedades
 		this.nombre = nombre;
 		this.contrasena = contrasena;
@@ -52,25 +60,9 @@ public class Usuario {
 	// Getters
 
 	/**
-	 *	Devuelve el índice del usuario en la lista
-	 *	de usuarios. Si no está registrado, devuelve -1.
-	 * 
-	 *	@return	Índice del usuario en la lista.
-	 */
-	private int getIndice() {
-		// Buscar índice del usuario en la lista.
-		int indice = -1;
-		for(int i = 0; i < lista.length && indice == -1; i++)
-			if(lista[i].nombre.equalsIgnoreCase(this.nombre)) indice = i;
-
-		// Devolver su índice (-1 si no está en la lista).
-		return indice;
-	}
-
-	/**
 	 *	Devuelve la lista de usuarios.
 	 * 
-	 *	@return	Lista de usuarios.
+	 *	@return	Lista de usuarios
 	 */
 	public static Usuario[] getUsuarios() {
 		return lista;
@@ -81,7 +73,7 @@ public class Usuario {
 	 *	de usuarios registrados. Si lo encuentra, lo
 	 *	devuelve. Si no, devuelve un valor nulo.
 	 *
-	 *	@return	Usuario con ese nombre, si existe.
+	 *	@return	Usuario con ese nombre, si existe
 	 */
 	public static Usuario getUsuario(String nombre) {
 		for(int i = 0; i < lista.length; i++)
@@ -95,7 +87,7 @@ public class Usuario {
 	 *	Devuelve el usuario que está conectado
 	 *	en la sesión actual.
 	 * 
-	 *	@return	Usuario actualmente conectado.
+	 *	@return	Usuario actualmente conectado
 	 */
 	public static Usuario getUsuarioConectado() {
 		return conectado;
@@ -104,7 +96,7 @@ public class Usuario {
 	/**
 	 *	Devuelve el nombre de un usuario.
 	 * 
-	 *	@return	Nombre del usuario.
+	 *	@return	Nombre del usuario
 	 */
 	public String getNombre() {
 		return this.nombre;
@@ -114,7 +106,7 @@ public class Usuario {
 	 *	Devuelve si el usuario tiene permisos de
 	 *	administrador o no.
 	 * 
-	 *	@return	Si el usuario es administrador o no.
+	 *	@return	Si el usuario es administrador o no
 	 */
 	public boolean isAdmin() {
 		return this.admin;
@@ -124,16 +116,16 @@ public class Usuario {
 	 *	Devuelve si el usuario está registrado en
 	 *	la lista de usuarios o no.
 	 *
-	 *	@return	Si el usuario está registrado o no.
+	 *	@return	Si el usuario está registrado o no
 	 */
 	public boolean isRegistrado() {
-		return this.getIndice() != -1;
+		return getUsuario(this.nombre) != null;
 	}
 
 	/**
 	 *	Devuelve si el usuario tiene contraseña o no.
 	 * 
-	 *	@return Si el usuario tiene contraseña o no.
+	 *	@return Si el usuario tiene contraseña o no
 	 */
 	public boolean tieneContrasena() {
 		return this.contrasena != null;
@@ -143,7 +135,7 @@ public class Usuario {
 	 *	Devuelve si el usuario tiene la contraseña
 	 *	proporcionada como argumento o no.
 	 * 
-	 *	@return	Si el usuario tiene esa contraseña o no.
+	 *	@return	Si el usuario tiene esa contraseña o no
 	 */
 	public boolean tieneContrasena(String contrasena) {
 		return (this.contrasena == null && contrasena == null) ||
@@ -164,27 +156,29 @@ public class Usuario {
 	 *		administrador de la biblioteca.
 	 *	</p>
 	 * 
-	 *	@param	in	Usuario a registrar.
+	 *	@param	nombre		Nombre del usuario a registrar
+	 *	@param	contrasena	Contraseña del usuario a registrar
+	 *	@param	admin		Si el usuario es administrador o no
 	 * 
-	 *	@return	Si se ha realizado la operación o no.
+	 *	@return	Código de error (0 si se ha realizado la operación)
 	 */
-	public static boolean registrar(Usuario in) {
-		// ¿Usuario nulo? Operación cancelada.
-		if(in == null) return false;
+	public static int registrar(String nombre, String contrasena, boolean admin) {
+		// ¿Permiso denegado? Error 1.
+		if(conectado == null || !conectado.admin) return 1;
 
-		// ¿Permiso denegado? Operación cancelada.
-		if(conectado == null || !conectado.admin) return false;
+		// ¿No caben más usuarios? Error 2.
+		if(lista.length == Integer.MAX_VALUE) return 2;
 
-		// ¿No caben más usuarios? Operación cancelada.
-		if(lista.length == Integer.MAX_VALUE) return false;
+		// ¿Nombre nulo o vacío? Error 3.
+		if(nombre == null || nombre.isEmpty() || nombre.isBlank())
+			return 3;
 
-		// ¿El nombre es nulo o está vacío? Operación cancelada.
-		if(in.nombre == null || in.nombre.isEmpty() || in.nombre.isBlank())
-			return false;
+		// ¿El usuario ya está registrado? Error 4.
+		if(Usuario.getUsuario(nombre) != null) return 4;
 
-		// ¿El usuario ya está registrado? Operación cancelada.
-		for(int i = 0; i < lista.length; i++)
-			if(lista[i].nombre.equalsIgnoreCase(in.nombre)) return false;
+		// ¿Contraseña vacía? Transformar a `null`.
+		if(contrasena != null && (contrasena.isEmpty() || contrasena.isBlank()))
+			contrasena = null;
 
 		// Crear copia de la lista de usuarios con un hueco extra.
 		Usuario[] copia = new Usuario[lista.length + 1];
@@ -194,143 +188,19 @@ public class Usuario {
 			copia[i] = lista[i];
 
 		// Meter este usuario al final.
-		copia[lista.length] = in;
+		copia[lista.length] = new Usuario(nombre, contrasena, admin);
 
 		// Sustituir la lista original por la copia.
 		lista = copia;
 
 		// Operación realizada.
-		return true;
+		return 0;
 	}
 
 	/**
 	 *	<p>
-	 *		Desconecta al usuario que esté actualmente conectado.
-	 *	</p>
-	 * 
-	 *	@return	Si se ha realizado la operación o no.
-	 */
-	public static boolean desconectar() {
-		// ¿No hay ningún usuario conectado? Operación cancelada.
-		if(conectado == null) return false;
-
-		// Realizar operación.
-		conectado = null;
-		return true;
-	}
-
-	/**
-	 *	<p>
-	 *		Borra al usuario de la lista de usuarios registrados,
-	 *		siempre y cuando esté presente en dicha lista.
-	 *	</p>
-	 *	<p>
-	 *		Esta función solo se completará si el usuario conectado
-	 *		en el momento de su ejecución es un administrador o
-	 *		el mismo usuario al que afecta el borrado de cuenta.
-	 *	</p>
-	 *	<p>
-	 *		La función no permite eliminar al usuario {@link #ROOT}.
-	 *	</p>
-	 * 
-	 *	@param	in	Usuario a eliminar.
-	 * 
-	 *	@return	Si se ha realizado la operación o no.
-	 */
-	public static boolean eliminar(Usuario in) {
-		// ¿Usuario nulo? Operación cancelada.
-		if(in == null) return false;
-
-		// ¿Permiso denegado? Operación cancelada.
-		if(conectado == null ||
-			(!in.nombre.equalsIgnoreCase(conectado.nombre) && !conectado.admin))
-			return false;
-
-		// ¿El usuario no está registrado? Operación cancelada.
-		int indice = in.getIndice();
-		if(indice == -1) return false;
-
-		// ¿El usuario a eliminar es ROOT? Operación cancelada.
-		if(in.nombre.equalsIgnoreCase(ROOT.nombre)) return false;
-
-		// Cerrar sesión en la cuenta a eliminar, si procede.
-		if(conectado.nombre.equalsIgnoreCase(in.nombre)) desconectar();
-
-		// Crear copia de la lista sin el elemento de ese indice.
-		Usuario[] copia = new Usuario[lista.length - 1];
-		for(int i = 0; i < indice; i++)
-			copia[i] = lista[i];
-
-		for(int i = indice; i < lista.length - 1; i++)
-			copia[i] = lista[i + 1];
-
-		// Sustituir lista original por la copia.
-		lista = copia;
-
-		// Operación realizada.
-		return true;
-	}
-
-	/**
-	 *	<p>
-	 *		Cambia el nombre del usuario actualmente conectado.
-	 *		Pueden realizar este cambio todos los usuarios menos
-	 *		el usuario 'root', que mantendrá su nombre siempre.
-	 *	</p>
-	 *	<p>
-	 *		Si el nuevo nombre ya pertenece a otro usuario,
-	 *		se cancelará la operación.
-	 *	</p>
-	 * 
-	 *	@param	newNombre	Nuevo nombre para el usuario.
-	 *
-	 *	@return	Si se ha realizado la operación o no.
-	 */
-	public static boolean cambiarNombre(String newNombre) {
-		// ¿Permiso denegado? Operación cancelada.
-		if(conectado == null ||
-			conectado.nombre.equalsIgnoreCase(ROOT.nombre))
-			return false;
-
-		// ¿El nuevo nombre ya está cogido? Operación cancelada.
-		if(getUsuario(newNombre) != null) return false;
-
-		// Realizar operación.
-		conectado.nombre = newNombre;
-		return true;
-	}
-
-	/**
-	 *	<p>
-	 *		Cambia la contraseña del usuario actualmente conectado.
-	 *	</p>
-	 *	<p>
-	 *		Tras cambiar la contraseña, se cerrará sesión en la cuenta.
-	 *		Si quiere continuar conectado, el usuario deberá volver
-	 *		a entrar en su cuenta usando la nueva contraseña.
-	 *	</p>
-	 * 
-	 *	@param	newContrasena	Nueva contraseña para el usuario.
-	 * 
-	 *	@return	Si se ha realizado la operación o no.
-	 */
-	public static boolean cambiarContrasena(String newContrasena) {
-		// ¿Ningún usuario conectado? Operación cancelada.
-		if(conectado == null) return false;
-
-		// Realizar operación.
-		conectado.contrasena = newContrasena;
-
-		// Cerrar sesión en la cuenta.
-		conectado = null;
-
-		// Operación realizada.
-		return true;
-	}
-
-	/**
-	 *	<p>
-	 *		Conecta al usuario a la sesión actual.
+	 *		Conecta al usuario con el nombre proporcionado
+	 *		a la sesión actual.
 	 *	</p>
 	 *	<p>
 	 *		La operación <strong>no se realizará</strong> en
@@ -345,23 +215,167 @@ public class Usuario {
 	 *		En cualquier otro caso, se realizará sin problema.
 	 *	</p>
 	 *
+	 *	@param	nombre		Nombre del usuario
 	 *	@param	contrasena	Contraseña del usuario
 	 * 
-	 *	@return	Si se ha realizado la operación o no.
+	 *	@return	Código de error (0 si se ha realizado la operación)
 	 */
-	public boolean conectar(String contrasena) {
-		// ¿Hay un usuario ya conectado? Operación cancelada.
-		if(conectado != null) return false;
+	public static int conectar(String nombre, String contrasena) {
+		// ¿Hay un usuario ya conectado? Error 1.
+		if(conectado != null) return 1;
 
-		// ¿El usuario no está registrado? Operación cancelada.
-		if(!this.isRegistrado()) return false;
+		// ¿Nombre nulo o vacío? Error 2.
+		if(nombre == null || nombre.isEmpty() || nombre.isBlank())
+			return 2;
 
-		// ¿Contraseña incorrecta? Operación cancelada.
-		if(!this.tieneContrasena(contrasena)) return false;
+		// ¿El usuario no está registrado? Error 3.
+		Usuario meta = Usuario.getUsuario(nombre);
+		if(meta == null) return 3;
+
+		// Convertir contraseñas vacías a `null`.
+		if(contrasena != null && (contrasena.isEmpty() || contrasena.isBlank()))
+			contrasena = null;
+
+		// ¿Contraseña incorrecta? Error 4.
+		if(!meta.tieneContrasena(contrasena)) return 4;
 
 		// Realizar operación.
-		conectado = this;
-		return true;
+		conectado = meta;
+		return 0;
+	}
+
+	/**
+	 *	<p>
+	 *		Desconecta al usuario que esté actualmente conectado.
+	 *	</p>
+	 * 
+	 *	@return	Código de error (0 si se ha realizado la operación)
+	 */
+	public static int desconectar() {
+		// ¿No hay ningún usuario conectado? Error 1.
+		if(conectado == null) return 1;
+
+		// Realizar operación.
+		conectado = null;
+		return 0;
+	}
+
+	/**
+	 *	<p>
+	 *		Borra al usuario de la lista de usuarios registrados,
+	 *		siempre y cuando esté presente en dicha lista.
+	 *	</p>
+	 *	<p>
+	 *		Esta función solo se completará si el usuario conectado
+	 *		en el momento de su ejecución es un administrador o
+	 *		el mismo usuario al que afecta el borrado de cuenta.
+	 *	</p>
+	 *	<p>
+	 *		La función no permite eliminar al usuario root
+	 *		porque esa acción podría dejar el programa en un
+	 *		estado inutilizable.
+	 *	</p>
+	 * 
+	 *	@param	nombre	Nombre del usuario a eliminar
+	 * 
+	 *	@return	Código de error (0 si se ha realizado la operación)
+	 */
+	public static int eliminar(String nombre) {
+		// ¿Nombre nulo o vacío? Error 1.
+		if(nombre == null || nombre.isEmpty() || nombre.isBlank())
+			return 1;
+
+		// ¿Permiso denegado? Error 2.
+		if(conectado == null ||
+			(!nombre.equalsIgnoreCase(conectado.nombre) && !conectado.admin))
+			return 2;
+
+		// Conseguir índice del usuario en la lista de usuarios
+		// registrados.
+		int indice = -1;
+		for(int i = 0; i < lista.length && indice == -1; i++)
+			if(lista[i].nombre.equalsIgnoreCase(nombre))
+				indice = i;
+
+		// ¿No está registrado? Error 3.
+		if(indice == -1) return 3;
+
+		// ¿El usuario a eliminar es 'root'? Error 4.
+		if(nombre.equalsIgnoreCase(lista[0].nombre)) return 4;
+
+		// Cerrar sesión en la cuenta a eliminar, si procede.
+		if(conectado.nombre.equalsIgnoreCase(nombre)) desconectar();
+
+		// Crear copia de la lista sin el elemento de ese indice.
+		Usuario[] copia = new Usuario[lista.length - 1];
+		for(int i = 0; i < indice; i++)
+			copia[i] = lista[i];
+
+		for(int i = indice; i < lista.length - 1; i++)
+			copia[i] = lista[i + 1];
+
+		// Sustituir lista original por la copia.
+		lista = copia;
+
+		// Operación realizada.
+		return 0;
+	}
+
+	/**
+	 *	<p>
+	 *		Cambia el nombre del usuario actualmente conectado.
+	 *		Pueden realizar este cambio todos los usuarios menos
+	 *		el usuario 'root', que mantendrá su nombre siempre.
+	 *	</p>
+	 *	<p>
+	 *		Si el nuevo nombre ya pertenece a otro usuario,
+	 *		se cancelará la operación.
+	 *	</p>
+	 * 
+	 *	@param	newNombre	Nuevo nombre para el usuario
+	 *
+	 *	@return	Código de error (0 si se ha realizado la operación)
+	 */
+	public static int cambiarNombre(String newNombre) {
+		// ¿Permiso denegado? Error 1.
+		if(conectado == null ||
+			conectado.nombre.equalsIgnoreCase(lista[0].nombre))
+			return 1;
+
+		// ¿El nuevo nombre ya está cogido? Error 2.
+		if(getUsuario(newNombre) != null) return 2;
+
+		// Realizar operación.
+		conectado.nombre = newNombre;
+		return 0;
+	}
+
+	/**
+	 *	<p>
+	 *		Cambia la contraseña del usuario actualmente conectado.
+	 *	</p>
+	 *	<p>
+	 *		Tras cambiar la contraseña, se cerrará sesión en la cuenta.
+	 *		Si quiere continuar conectado, el usuario deberá volver
+	 *		a entrar en su cuenta usando la nueva contraseña.
+	 *	</p>
+	 * 
+	 *	@param	newContrasena	Nueva contraseña para el usuario
+	 * 
+	 *	@return	Código de error (0 si se ha realizado la operación)
+	 */
+	public static int cambiarContrasena(String newContrasena) {
+		// ¿Ningún usuario conectado? Error 1.
+		if(conectado == null) return 1;
+
+		// Realizar operación.
+		conectado.contrasena = newContrasena;
+
+		// Cerrar sesión en la cuenta.
+		conectado = null;
+
+		// Operación realizada.
+		return 0;
 	}
 
 	/**

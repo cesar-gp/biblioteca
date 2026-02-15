@@ -1,4 +1,4 @@
-package dam.biblioteca;
+package dam.biblioteca.frontend;
 
 /**
  *	<p>

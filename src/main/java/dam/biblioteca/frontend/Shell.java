@@ -1,4 +1,8 @@
-package dam.biblioteca;
+package dam.biblioteca.frontend;
+
+import dam.biblioteca.backend.Usuario;
+import dam.biblioteca.backend.Libro;
+import dam.biblioteca.backend.Prestamo;
 
 /**
  *	Implementación de una <em>shell</em>, un programa
@@ -317,12 +321,27 @@ public class Shell {
 
 						// Intentar registrar al usuario y mostrar
 						// mensaje indicando si se ha realizado la operación.
-						if(Usuario.registrar(new Usuario(nombre, contrasena, administrador))) {
-							System.out.print("Se ha registrado el usuario '" + nombre + "'");
-							if(administrador) System.out.print(" con permisos de administrador");
-							System.out.println('.');
-						} else {
-							System.out.println("Error: no se ha podido registrar el usuario.");
+						switch(Usuario.registrar(nombre, contrasena, administrador)) {
+							case 0:
+								System.out.print("Se ha registrado el usuario '" + nombre + "'");
+								if(administrador) System.out.print(" con permisos de administrador");
+								System.out.println('.');
+								break;
+							case 1:
+								System.out.println("Error: permiso denegado.");
+								break;
+							case 2:
+								System.out.println("Error: se ha alcanzado el máximo de usuarios.");
+								break;
+							case 3:
+								System.out.println("Error: no se admiten nombres nulos o vacíos.");
+								break;
+							case 4:
+								System.out.println("Error: el usuario '" + nombre + "' ya está registrado.");
+								break;
+							default:
+								System.out.println("Error: ha ocurrido un error desconocido al registrar al usuario.");
+								break;
 						}
 
 						break;
@@ -390,15 +409,29 @@ public class Shell {
 							}
 						}
 
-						if(Usuario.eliminar(objetivo)) {
-							if(objetivo.getNombre().equalsIgnoreCase(actual.getNombre())) {
-								System.out.println("Se ha eliminado tu usuario.");
-								System.out.println("En consecuencia, también se ha cerrado la sesión.");
-							} else {
-								System.out.println("Se ha eliminado el usuario con el nombre '" + objetivo.getNombre() + "'.");
-							}
-						} else {
-							System.out.println("Error: no se ha podido eliminar el usuario.");
+						switch(Usuario.eliminar(nombre)) {
+							case 0:
+								if(nombre.equalsIgnoreCase(actual.getNombre())) {
+									System.out.println("Se ha eliminado tu usuario.");
+									System.out.println("En consecuencia, también se ha cerrado la sesión.");
+								} else {
+									System.out.println("Se ha eliminado el usuario con el nombre '" + objetivo.getNombre() + "'.");
+								}
+								break;
+							case 1:
+								System.out.println("Error: no existen usuarios con nombre nulo o vacío.");
+								break;
+							case 2:
+								System.out.println("Error: permiso denegado.");
+								break;
+							case 3:
+								System.out.println("Error: el usuario '" + nombre + "' no está registrado.");
+								break;
+							case 4:
+								System.out.println("Error: no se puede eliminar el usuario 'root'.");
+								break;
+							default:
+								break;
 						}
 
 						break;
@@ -423,7 +456,17 @@ public class Shell {
 			case "o":
 			case "out":
 			case "logout":
-				Usuario.desconectar();
+				switch(Usuario.desconectar()) {
+					case 0:
+						System.out.println("Sesión cerrada.");
+						break;
+					case 1:
+						System.out.println("Error: no hay ningún usuario conectado.");
+						break;
+					default:
+						System.out.println("Error: ha ocurrido un error desconocido al cerrar sesión.");
+						break;
+				}
 				break;
 			case "x":
 			case "ex":
@@ -431,6 +474,7 @@ public class Shell {
 				return false;
 			default:
 				System.out.println("Error: no se reconoce '" + argv[0] + "' como comando.");
+				System.out.println("Pon 'help' para ver la lista de comandos.");
 				break;
 		}
 
@@ -459,37 +503,57 @@ public class Shell {
 		while(abierta) {
 			Usuario actual = Usuario.getUsuarioConectado();
 			if(actual == null) {
+				// Pedir nombre de usuario.
 				String nombre = respuesta("\nUsuario: ", false);
+
+				// Si el nombre está vacío, salir del programa.
 				if(nombre == null || nombre.isEmpty() || nombre.isBlank()) {
 					abierta = false;
 					break;
 				}
 
+				// Conseguir usuario, si existe.
 				actual = Usuario.getUsuario(nombre);
 
+				// Pedir contraseña
+				// (si el usuario existe y no tiene contraseña, no pedirla).
 				String contrasena = null;
 				if(actual == null || actual.tieneContrasena())
 					contrasena = respuesta("\nContraseña: ", true);
 
+				// Mostrar mensaje de bienvenida o de error.
 				System.out.println("\n--");
-				if(actual != null && actual.conectar(contrasena)) {
-					System.out.println("¡Bienvenido a la biblioteca, " + actual.getNombre() + "! <3");
-					System.out.println("Pon 'help' para ver la lista de comandos.");
-					if(actual.isAdmin()) {
-						System.out.println("\nTienes permisos de administrador, revisa bien");
-						System.out.println("lo que escribes antes de ejecutarlo.");
-					}
-				} else {
-					System.out.println("El usuario no existe o la contraseña es incorrecta :(");
+				switch(Usuario.conectar(nombre, contrasena)) {
+					case 0:
+						System.out.println("¡Bienvenido a la biblioteca, " + actual.getNombre() + "! <3");
+						System.out.println("Pon 'help' para ver la lista de comandos.");
+						if(actual.isAdmin()) {
+							System.out.println("\nTienes permisos de administrador, revisa bien");
+							System.out.println("lo que escribes antes de ejecutarlo.");
+						}
+						break;
+					case 1:
+						System.out.println("Error: ya hay un usuario conectado.");
+						break;
+					case 2:
+						System.out.println("Error: no hay usuarios con nombres nulos o vacíos.");
+						break;
+					case 3:
+					case 4:
+						System.out.println("Error: nombre o contraseña incorrectos.");
+						break;
+					default:
+						System.out.println("Error: ha ocurrido un error desconocido al iniciar sesión.");
+						break;
 				}
-				System.out.println("--\n");
+				System.out.println("--");
 
 				continue;
 			}
 
 			char simbolo = '$';
 			if(actual != null && actual.isAdmin()) simbolo = '#';
-			abierta = ejecutar(respuesta(simbolo + " ", false));
+			abierta = ejecutar(respuesta("\n[" + actual.getNombre() + ']' + simbolo + " ", false));
 		}
 	}
 }

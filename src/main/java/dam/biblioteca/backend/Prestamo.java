@@ -1,4 +1,4 @@
-package dam.biblioteca;
+package dam.biblioteca.backend;
 
 public class Prestamo {
 
