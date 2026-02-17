@@ -25,15 +25,30 @@ Abre un terminal en cualquier carpeta y sigue estos pasos:
 
 ### Desde Eclipse
 
+El repositorio está preparado para ser compatible con Eclipse, por lo que se puede modificar el código realizar _push_ y _pull_ desde este IDE sin problema.
+
 1. Abre la carpeta que contiene tu *workspace* de Eclipse.
 2. Clona el repositorio: `git clone https://github.com/cesar-gp/biblioteca.git`.
 3. Cuando abras Eclipse, el proyecto debería estar en la lista de la izquierda. Haz click derecho en su nombre.
 4. Despliega el submenú *Run As* y haz click en *Maven install*.
 5. Tras hacer esto, podrás pulsar sin problemas el botón de ejecución de la barra superior.
 
+### Desde Visual Studio Code
+
+Este IDE genera archivos de compilación que no están presentes en el repositorio. Además, su funcionamiento depende en gran parte de las extensiones que utilice el usuario, por esa razón **se recomienda no hacer ningún _push_ desde Visual Studio.**
+
+1. Si tienes alguna carpeta abierta, ciérrala.
+2. En el explorador de archivos, haz click en `Clone Repository`.
+3. Escribe la URL de este repositorio (`https://github.com/cesar-gp/biblioteca`).
+4. El programa te preguntará si quieres abrir el repositorio, haz click en `Open`.
+5. Abre la carpeta `src/main/java/dam/biblioteca` y, dentro de ella, la clase `Main.java`.
+6. Haz click en el botón de ejecución de la barra superior.
+
 ### Desde otro IDE
 
-Los pasos mencionados para Eclipse deberían funcionar en cualquier otro IDE, con una mínima adaptación. Sin embargo, no hemos probado a ejecutarlo en ningún otro IDE y no podemos ofrecer ninguna garantía al respecto.
+Los pasos mencionados para Eclipse y VS Code deberían servir como guía para otros casos. Sin embargo, no hemos probado a ejecutarlo en ningún otro IDE y no podemos ofrecer ninguna garantía al respecto.
+
+Como regla general, no se admitirán _push_ y _pull_ realizados desde cualquier otro IDE.
 
 ## Autores
 - [César Gutiérrez Pérez](https://github.com/cesar-gp)
