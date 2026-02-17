@@ -28,15 +28,35 @@ public class Shell {
 	
 	private static final Scanner SCANNER = new Scanner(System.in);
 
+	// Código de error inicial.
+	public static final int ERR_INICIO = -1;
+
+	// Rango de errores para comandos (0 - 99).
+	public static final int ERR_COMANDO = 0;
+
+	// Rango de errores para argumentos (100 - 199).
+	public static final int ERR_ARGUMENTO = 100;
+
+	// Errores de autenticación (200 - 299).
+	public static final int ERR_AUTENTICACION = 200;
+
+	// Errores relacionados con acciones del usuario (300 - 399).
+	public static final int ERR_USUARIO = 300;
+
+	// Errores desconocidos o no clasificados (400 - ...).
+	public static final int ERR_DESCONOCIDO = 400;
+
 	// Propiedades no estáticas
 
 	private boolean abierta;
+	private int codigoError;
 	private Sesion sesion;
 
 	// Constructores
 
 	public Shell() {
 		this.abierta = false;
+		this.codigoError = ERR_INICIO;
 		this.sesion = new Sesion();
 	}
 
@@ -49,6 +69,15 @@ public class Shell {
 	 */
 	public boolean isAbierta() {
 		return this.abierta;
+	}
+
+	/**
+	 *	Devuelve el último código de error.
+	 * 
+	 *	@return	Último código de error.
+	 */
+	public int getCodigoError() {
+		return this.codigoError;
 	}
 
 	/**
@@ -113,7 +142,9 @@ public class Shell {
 	 *		</li>
 	 *		<li>
 	 *			En cualquier otra situación, la función
-	 *			devolverá el valor {@code null}.
+	 *			devolverá el valor {@code null}, o el
+	 *			valor predeterminado si el tercer argumento
+	 *			tiene el valor {@code true}.
 	 *		</li>
 	 *	</ul>
 	 * 
@@ -122,7 +153,7 @@ public class Shell {
 	 * 
 	 *	@return	Conversión de la String a Boolean.
 	 */
-	private Boolean stringABoolean(String in, Boolean predeterminada) {
+	private Boolean stringABoolean(String in, Boolean predeterminada, boolean forzar) {
 		if(in.equalsIgnoreCase("y"))
 			return true;
 		else if(in.equalsIgnoreCase("n"))
@@ -130,7 +161,8 @@ public class Shell {
 		else if(in.isEmpty() && predeterminada != null)
 			return predeterminada;
 		else
-			return null;
+			if(forzar) return predeterminada;
+			else return null;
 	}
 
 	/**
@@ -181,7 +213,7 @@ public class Shell {
 
 		// Recibir respuesta del usuario y convertirla a Boolean.
 		String respuesta = respuesta(msg + " [" + yes + "/" + no + "] ", false);
-		Boolean out = stringABoolean(respuesta, predeterminada);
+		Boolean out = stringABoolean(respuesta, predeterminada, false);
 
 		// ¿Valor inválido? Volver a preguntar. ¿Válido? Devolver.
 		if(out == null) return respuestaBinaria(msg, predeterminada);
@@ -227,10 +259,12 @@ public class Shell {
 	 *		registrados en el programa. Solo puede
 	 *		ser ejecutado por un administrador.
 	 *	</p>
+	 * 
+	 *	@return	Código de error
 	 */
-	private void list(String[] argv) {
+	private int list(String[] argv) {
 		// ¿El usuario no es administrador? Error.
-		if(!comprobarPermisos()) return;
+		if(!comprobarPermisos()) return ERR_AUTENTICACION + 1;
 
 		// Especificar tipo a listar, o cogerlo
 		// del primer argumento si existe.
@@ -239,28 +273,23 @@ public class Shell {
 		else tipo = argv[1];
 
 		switch(tipo) {
-			case "u":
-			case "usuario":
-			case "usuarios":
+			case "u": case "usuario": case "usuarios":
 				// Mostrar lista de usuarios.
 				System.out.println(Listas.lista(Usuario.getUsuarios(), true));
-				break;
-			case "l":
-			case "libro":
-			case "libros":
+				return ERR_COMANDO;
+			case "l": case "libro": case "libros":
 				// Mostrar lista de libros.
 				System.out.println(Listas.lista(Libro.getLibros(), true));
-				break;
-			case "p":
-			case "prestamo":
-			case "prestamos":
+				return ERR_COMANDO;
+			case "p": case "prestamo": case "préstamo":
+			case "prestamos": case "préstamos":
 				// Mostrar lista de préstamos.
 				System.out.println(Listas.lista(Prestamo.getPrestamos(), true));
-				break;
+				return ERR_COMANDO;
 			default:
 				// ¿Otro tipo? Error.
 				tipoIncorrecto();
-				break;
+				return ERR_ARGUMENTO + 1;
 		}
 	}
 
@@ -272,10 +301,12 @@ public class Shell {
 	 *		Registra usuarios, libros o préstamos.
 	 *		Solo puede ser ejecutado por un administrador.
 	 *	</p>
+	 * 
+	 *	@return	Código de error
 	 */
-	private void register(String[] argv) {
+	private int register(String[] argv) {
 		// ¿El usuario no es administrador? Error.
-		if(!comprobarPermisos()) return;
+		if(!comprobarPermisos()) return ERR_AUTENTICACION + 1;
 
 		// Especificar tipo a registrar, o cogerlo
 		// del primer argumento si existe.
@@ -284,8 +315,7 @@ public class Shell {
 		else tipo = argv[1];
 
 		switch(tipo) {
-			case "u":
-			case "usuario":
+			case "u": case "usuario":
 				// Especificar nombre del usuario, o cogerlo
 				// del segundo argumento si existe. 
 				String nombre;
@@ -308,15 +338,12 @@ public class Shell {
 				// si existe.
 				Boolean administrador;
 				if(argv.length < 5) administrador = respuestaBinaria("¿Dar permisos de administrador?", false);
-				else administrador = stringABoolean(argv[4], false);
-
-				if(administrador == null) {
-					administrador = respuestaBinaria("¿Dar permisos de administrador?", false);
-				}
+				else administrador = stringABoolean(argv[4], false, true);
 
 				// Intentar registrar al usuario y mostrar
 				// mensaje indicando si se ha realizado la operación.
-				switch(Usuario.registrar(nombre, contrasena, administrador)) {
+				int err = Usuario.registrar(nombre, contrasena, administrador);
+				switch(err) {
 					case 0:
 						System.out.print("Se ha registrado el usuario '" + nombre + "'");
 						if(administrador) System.out.print(" con permisos de administrador");
@@ -336,19 +363,17 @@ public class Shell {
 						break;
 				}
 
-				break;
-			case "l":
-			case "libro":
+				return ERR_COMANDO + err;
+			case "l": case "libro":
 				// Registrar libro. No soportado.
-				break;
-			case "p":
-			case "prestamo":
+				return ERR_DESCONOCIDO;
+			case "p": case "prestamo": case "préstamo":
 				// Registrar préstamo. No soportado.
-				break;
+				return ERR_DESCONOCIDO;
 			default:
 				// ¿Otro tipo? Error.
 				tipoIncorrecto();
-				break;
+				return ERR_ARGUMENTO + 1;
 		}
 	}
 
@@ -362,50 +387,57 @@ public class Shell {
 	 *		cuenta. De lo contrario, puede elegir qué
 	 *		usuario, libro o préstamo quiere borrar.
 	 *	</p>
+	 * 
+	 *	@return	Código de error
 	 */
-	private void remove(String[] argv) {
+	private int remove(String[] argv) {
 		// ¿El usuario no es administrador? Pedirle
 		// confirmación para borrar su propio usuario.
-		boolean propia = false;
+		boolean noAdmin = false;
 		if(!this.sesion.getUsuario().isAdmin()) {
-			propia = respuestaBinaria("Este comando eliminará tu propio usuario, ¿quieres continuar?", false);
-			if(!propia) return;
+			// Averiguar si quiere continuar con la ejecución
+			// del comando. Preguntar o sacar segundo argumento.
+			if(argv.length < 2) respuestaBinaria("Este comando eliminará tu propio usuario, ¿quieres continuar?", false);
+			else noAdmin = stringABoolean(argv[1], false, true);
+			
+			// Detener la ejecución si no quiere continuar.
+			if(!noAdmin) return ERR_USUARIO;
 		}
 
 		// Especificar tipo a borrar:
 		//  - Si no es administrador, borrará su propio usuario.
 		//  - Si lo es, pedir el tipo o cogerlo del primer argumento.
 		String tipo;
-		if(propia) tipo = "usuario";
+		if(noAdmin) tipo = "usuario";
 		else if(argv.length < 2) tipo = respuesta("Tipo [usuario/libro/prestamo]: ", false);
 		else tipo = argv[1];
 
 		switch(tipo) {
-			case "u":
-			case "usuario":
+			case "u": case "usuario":
 				String nombre;
 
 				// Sacar nombre del usuario a borrar.
 				// ¿No es administrador? Sacar su propio nombre.
 				// ¿Sí lo es? Tercer argumento o su respuesta.
-				if(propia) nombre = this.sesion.getUsuario().getNombre();
+				if(noAdmin) nombre = this.sesion.getUsuario().getNombre();
 				else if(argv.length < 3) nombre = respuesta("Nombre: ", false);
 				else nombre = argv[2];
 
 				// Sacar usuario a borrar a partir del nombre.
 				Usuario objetivo;
-				if(propia) objetivo = this.sesion.getUsuario();
+				if(noAdmin) objetivo = this.sesion.getUsuario();
 				else objetivo = Usuario.getUsuario(nombre);
 
 				// ¿El usuario no existe? Error.
 				if(objetivo == null) {
 					System.out.println("Error: el usuario introducido no existe.");
-					break;
+					return ERR_ARGUMENTO + 2;
 				}
 
 				// Intentar eliminar el usuario
 				// e informar del resultado.
-				switch(objetivo.eliminar()) {
+				int err = objetivo.eliminar();
+				switch(err) {
 					case 0:
 						System.out.println("Se ha eliminado el usuario '" + objetivo.getNombre() + "'.");
 
@@ -426,19 +458,17 @@ public class Shell {
 						break;
 				}
 
-				break;
-			case "l":
-			case "libro":
+				return ERR_COMANDO + err;
+			case "l": case "libro":
 				// No soportado.
-				break;
-			case "p":
-			case "prestamo":
+				return ERR_DESCONOCIDO;
+			case "p": case "prestamo": case "préstamo":
 				// No soportado.
-				break;
+				return ERR_DESCONOCIDO;
 			default:
 				// ¿Otro tipo? Error.
 				tipoIncorrecto();
-				break;
+				return ERR_ARGUMENTO + 1;
 		}
 	}
 
@@ -451,8 +481,10 @@ public class Shell {
 	 *		con el usuario, como su nombre, contraseña
 	 *		y rol.
 	 *	</p>
+	 * 
+	 *	@return	Código de error
 	 */
-	private void set(String[] argv) {
+	private int set(String[] argv) {
 		// Sacar campo del segundo argumento
 		// o de respuesta del usuario.
 		String campo;
@@ -463,6 +495,10 @@ public class Shell {
 		// valor del campo a cambiar.
 		String valor;
 
+		// Inicializar código de error para
+		// devolverlo al terminar la ejecución.
+		int err;
+
 		// Intentar cambiar el valor del cambio.
 		switch(campo) {
 			case "n": case "nom": case "nombre":
@@ -472,7 +508,8 @@ public class Shell {
 				else valor = argv[2];
 
 				// Intentar cambiar el nombre e informar del resultado.
-				switch(this.sesion.getUsuario().setNombre(valor)) {
+				err = this.sesion.getUsuario().setNombre(valor);
+				switch(err) {
 					case 0:
 						System.out.println("Nombre cambiado.");
 						break;
@@ -481,17 +518,19 @@ public class Shell {
 						break;
 					default:
 						System.out.println("Error: fallo desconocido al cambiar el nombre.");
+						break;
 				}
 
-				break;
-			case "c": case "con": case "contraseña":
+				return ERR_COMANDO + err;
+			case "c": case "con": case "contrasena": case "contraseña":
 				// Sacar valor del tercer argumento
 				// o de respuesta del usuario.
 				if(argv.length < 3) valor = respuesta("Nueva contraseña: ", true);
 				else valor = argv[2];
 
 				// Intentar cambiar la contraseña e informar del resultado.
-				switch(this.sesion.getUsuario().setContrasena(valor)) {
+				err = this.sesion.getUsuario().setContrasena(valor);
+				switch(err) {
 					case 0:
 						System.out.println("Contraseña cambiada.");
 
@@ -506,10 +545,10 @@ public class Shell {
 						System.out.println("Error: fallo desconocido al cambiar la contraseña.");
 				}
 				
-				break;
+				return ERR_COMANDO + err;
 			case "r": case "rol":
 				// ¿No es administrador? Error.
-				if(!comprobarPermisos()) return;
+				if(!comprobarPermisos()) return ERR_AUTENTICACION + 1;
 
 				// Sacar valor del tercer argumento
 				// o de respuesta del usuario.
@@ -529,7 +568,7 @@ public class Shell {
 					default:
 						System.out.println("Error: rol no reconocido.");
 						System.out.println("Valores válidos: usuario, administrador.");
-						return;
+						return ERR_ARGUMENTO + 2;
 				}
 
 				// Sacar nombre del usuario afectado
@@ -544,11 +583,12 @@ public class Shell {
 				Usuario usuario = Usuario.getUsuario(nombre);
 				if(usuario == null) {
 					System.out.println("Error: el usuario '" + nombre + "' no existe.");
-					return;
+					return ERR_ARGUMENTO + 3;
 				}
 
 				// Intentar cambiar el rol e informar del resultado.
-				switch(usuario.setAdmin(newAdmin)) {
+				err = usuario.setAdmin(newAdmin);
+				switch(err) {
 					case 0:
 						String rol = "administrador";
 						if(!newAdmin) rol = "usuario";
@@ -563,13 +603,45 @@ public class Shell {
 						break;
 				}
 
-				break;
+				return ERR_COMANDO + err;
 			default:
 				// ¿Otro campo? Error.
 				System.out.println("Error: campo no reconocido.");
 				System.out.println("Valores válidos: nombre, contraseña, rol.");
-				break;
+				
+				return ERR_ARGUMENTO + 1;
 		}
+	}
+
+	/**
+	 *	<p>
+	 *		Función del comando {@code error}.
+	 *	</p>
+	 *	<p>
+	 *		Muestra el último código de error.
+	 *	</p>
+	 * 
+	 *	@return	Código de error
+	 */
+	public int error() {
+		String mensaje = "código de error no reconocido";
+		if(this.codigoError >= ERR_DESCONOCIDO)
+			mensaje = "error desconocido";
+		else if(this.codigoError >= ERR_USUARIO)
+			mensaje = "operación cancelada o detenida por el usuario";
+		else if(this.codigoError >= ERR_AUTENTICACION)
+			mensaje = "sesión inválida o permiso denegado";
+		else if(this.codigoError >= ERR_ARGUMENTO)
+			mensaje = "se ha introducido un comando o argumento inválido";
+		else if(this.codigoError > ERR_COMANDO)
+			mensaje = "error nº " + (this.codigoError - ERR_COMANDO) + " al ejecutar el comando.";
+		else if(this.codigoError == ERR_COMANDO)
+			mensaje = "comando ejecutado sin errores";
+		else if(this.codigoError == ERR_INICIO)
+			mensaje = "todavía no se ha ejecutado ningún comando";
+
+		System.out.println(this.codigoError + ": " + mensaje + ".");
+		return ERR_COMANDO;
 	}
 
 	/**
@@ -579,10 +651,13 @@ public class Shell {
 	 *	<p>
 	 *		Cierra la sesión del usuario.
 	 *	</p>
+	 * 
+	 *	@return	Código de error
 	 */
-	private void logout() {
+	private int logout() {
 		// Intentar cerrar sesión e informar del resultado.
-		switch(this.sesion.cerrar()) {
+		int err = this.sesion.cerrar();
+		switch(err) {
 			case 0:
 				System.out.println("Sesión cerrada.");
 				break;
@@ -593,6 +668,9 @@ public class Shell {
 				System.out.println("Error: fallo desconocido al cerrar sesión.");
 				break;
 		}
+
+		// Devolver código de error del comando.
+		return ERR_COMANDO + err;
 	}
 
 	/**
@@ -603,8 +681,10 @@ public class Shell {
 	 *		Muestra un mensaje de ayuda con la
 	 *		lista de comandos y sus descripciones.
 	 *	</p>
+	 * 
+	 *	@return	Código de error
 	 */
-	private void help() {
+	private int help() {
 		// Crear texto vacío.
 		String out = "";
 
@@ -636,6 +716,9 @@ public class Shell {
 
 		// Añadir descripciones para todos los usuarios.
 		out +=
+			" - error\n" +
+			"   Muestra el último código de error.\n" +
+			"\n" +
 			" - help\n" +
 			"   Muestra este mensaje.\n" +
 			"\n" +
@@ -647,6 +730,9 @@ public class Shell {
 
 		// Mostrar texto completo.
 		System.out.println(out);
+
+		// Operación realizada.
+		return ERR_COMANDO;
 	}
 
 	// Funciones: funcionalidad básica de la shell.
@@ -658,55 +744,51 @@ public class Shell {
 	 *	@param	cmd	Comando recibido, con todos sus
 	 *				argumentos
 	 * 
-	 *	@return	Si la shell debe seguir abierta tras
-	 *			la ejecución
+	 *	@return	Código de error
 	 */
-	public boolean ejecutar(String cmd) {
+	public int ejecutar(String cmd) {
 		// Separar el comando en argumentos.
 		String[] argv = cmd.split(" ");
 
 		if(this.sesion.getUsuario() == null) {
 			System.out.println("Error crítico: sesión inválida.");
-			return false;
+			return ERR_AUTENTICACION;
 		}
 
 		// Ver qué comando quiere ejecutar el usuario.
 		switch(argv[0]) {
 			case "l": case "ls": case "list":
-				this.list(argv);
-				break;
+				return this.list(argv);
 			case "r": case "reg": case "register":
-				this.register(argv);
-				break;
+				return this.register(argv);
 			case "d": case "del": case "rem": case "delete": case "remove":
-				this.remove(argv);
-				break;
+				return this.remove(argv);
 			case "h": case "?": case "help":
-				this.help();
-				break;
+				return this.help();
 			case "s": case "set":
-				this.set(argv);
-				break;
+				return this.set(argv);
+			case "e": case "err": case "error":
+				return this.error();
 			case "o": case "out": case "logout":
-				this.logout();
-				break;
+				return this.logout();
 			case "x": case "ex": case "exit":
-				return false;
+				this.abierta = false;
+				return ERR_COMANDO;
 			default:
 				System.out.println("Error: no se reconoce '" + argv[0] + "' como comando.");
 				System.out.println("Pon 'help' para ver la lista de comandos.");
-				break;
+				return ERR_ARGUMENTO;
 		}
-
-		return true;
 	}
 	
 	/**
-	 *	Abre la shell, que pedirá textos de entrada al usuario
-	 *	repetidamente hasta que este decida cerrarla.
+	 *	Abre la shell, que obligará al usuario a
+	 *	iniciar sesión y, tras esto, le pedirá
+	 *	comandos repetidamente hasta que decida
+	 *	cerrar la sesión o el programa.
 	 */
 	public void abrir() {
-		abierta = true;
+		this.abierta = true;
 
 		System.out.println("\n--");
 		System.out.println("¡Hola! Si es la primera vez que usas el programa,");
@@ -724,6 +806,9 @@ public class Shell {
 			Usuario con = this.sesion.getUsuario();
 
 			if(con == null) {
+				// Limpiar código de error anterior.
+				this.codigoError = ERR_INICIO;
+
 				// Pedir nombre de usuario.
 				String nombre = respuesta("\nUsuario: ", false);
 
@@ -763,10 +848,10 @@ public class Shell {
 						break;
 				}
 			} else {
-				// Pedir comando al usuario, ejecutar lo que responda
-				// y decidir si la shell sigue abierta en función del
-				// valor devuelto por la función ejecutada.
-				abierta = ejecutar(respuesta("\n" + this.sesion + " ", false));
+				// Pedir comando al usuario, ejecutarlo
+				// y guardar el valor devuelto como
+				// último código de error.
+				this.codigoError = this.ejecutar(respuesta("\n" + this.sesion + " ", false));
 			}
 		}
 		

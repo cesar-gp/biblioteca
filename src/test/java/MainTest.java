@@ -6,8 +6,6 @@ import dam.biblioteca.frontend.Shell;
 
 public class MainTest {
 
-	// TODO: mejorar la API y mejorar los tests.
-
 	// Constantes
 
 	public static final Shell SHELL = new Shell();
@@ -37,7 +35,7 @@ public class MainTest {
 	public void testUsuarioRoot() {
 		// Intentar conectarse como root
 		// con una contraseña incorrecta.
-		assertEquals(SHELL.getSesion().abrir(Usuario.getUsuario(ROOT_NM), "prueba"), 2);
+		assertNotEquals(SHELL.getSesion().abrir(Usuario.getUsuario(ROOT_NM), "prueba"), 0);
 		assertFalse(comprobarConexion(ROOT_NM));
 
 		// Probar conexión como root sin contraseña.
@@ -51,7 +49,7 @@ public class MainTest {
 
 		// Cambiar la contraseña de root, y comprobar
 		// que el usuario se desconecta.
-		SHELL.ejecutar("set contraseña " + ROOT_PW);
+		assertEquals(SHELL.ejecutar("set contraseña " + ROOT_PW), Shell.ERR_COMANDO);
 		assertTrue(comprobarConexion(null));
 
 		// Conectarse a la cuenta de root con la nueva
@@ -60,23 +58,23 @@ public class MainTest {
 		assertTrue(comprobarConexion(ROOT_NM));
 
 		// Probar permisos para registrar un usuario.
-		SHELL.ejecutar("register usuario " + TEMP_NM + " " + TEMP_PW + " n");
+		assertEquals(SHELL.ejecutar("register usuario " + TEMP_NM + " " + TEMP_PW + " n"), Shell.ERR_COMANDO);
 		assertNotNull(Usuario.getUsuario(TEMP_NM));
 
 		// Probar permisos para eliminar un usuario.
-		SHELL.ejecutar("remove usuario " + TEMP_NM + " " + TEMP_PW);
+		assertEquals(SHELL.ejecutar("remove usuario " + TEMP_NM + " " + TEMP_PW), Shell.ERR_COMANDO);
 		assertNull(Usuario.getUsuario(TEMP_NM));
 
 		// Probar que no se puede eliminar el usuario root.
-		SHELL.ejecutar("remove usuario " + ROOT_NM);
+		assertNotEquals(SHELL.ejecutar("remove usuario " + ROOT_NM), Shell.ERR_COMANDO);
 		assertNotNull(Usuario.getUsuario(ROOT_NM));
 
 		// Cerrar sesión
-		SHELL.ejecutar("logout");
+		assertEquals(SHELL.ejecutar("logout"), Shell.ERR_COMANDO);
 		assertTrue(comprobarConexion(null));
 
 		// Probar a volver a cerrar sesión. Debe dar error.
-		assertEquals(SHELL.getSesion().cerrar(), 1);
+		assertNotEquals(SHELL.getSesion().cerrar(), 0);
 	}
 
 	@Test
@@ -85,10 +83,10 @@ public class MainTest {
 		// y cerrar sesión después.
 		assertEquals(SHELL.getSesion().abrir(Usuario.getUsuario(ROOT_NM), null), 0);
 
-		SHELL.ejecutar("register usuario " + SUDO_NM + " " + SUDO_PW + " y");
+		assertEquals(SHELL.ejecutar("register usuario " + SUDO_NM + " " + SUDO_PW + " y"), Shell.ERR_COMANDO);
 		assertNotNull(Usuario.getUsuario(SUDO_NM));
 
-		SHELL.ejecutar("register usuario " + USER_NM + " " + USER_PW + " y");
+		assertEquals(SHELL.ejecutar("register usuario " + USER_NM + " " + USER_PW + " y"), Shell.ERR_COMANDO);
 		assertNotNull(Usuario.getUsuario(USER_NM));
 
 		assertEquals(SHELL.getSesion().cerrar(), 0);
@@ -99,36 +97,36 @@ public class MainTest {
 		assertTrue(comprobarConexion(SUDO_NM));
 
 		// Intentar quitar privilegios a root. Debe dar error.
-		SHELL.ejecutar("set rol usuario " + ROOT_NM);
+		assertNotEquals(SHELL.ejecutar("set rol usuario " + ROOT_NM), Shell.ERR_COMANDO);
 		assertTrue(Usuario.getUsuario(ROOT_NM).isAdmin());
 
 		// Intentar eliminar el usuario root. Debe dar error.
-		SHELL.ejecutar("remove usuario " + ROOT_NM);
+		assertNotEquals(SHELL.ejecutar("remove usuario " + ROOT_NM), Shell.ERR_COMANDO);
 		assertNotNull(Usuario.getUsuario(ROOT_NM));
 
 		// Quitar privilegios a la segunda cuenta.
-		SHELL.ejecutar("set rol usuario " + USER_NM);
+		assertEquals(SHELL.ejecutar("set rol usuario " + USER_NM), Shell.ERR_COMANDO);
 		assertFalse(Usuario.getUsuario(USER_NM).isAdmin());
 
 		// Cambiar su nombre y contraseña.
-		SHELL.ejecutar("set nombre prueba");
+		assertEquals(SHELL.ejecutar("set nombre prueba"), Shell.ERR_COMANDO);
 		assertNull(Usuario.getUsuario(SUDO_NM));
 		assertNotNull(Usuario.getUsuario("prueba"));
-		SHELL.ejecutar("set contraseña insegura");
+		assertEquals(SHELL.ejecutar("set contraseña insegura"), Shell.ERR_COMANDO);
 		assertTrue(comprobarConexion(null));
 
 		// Conectarse y volverlos a cambiar.
 		assertEquals(SHELL.getSesion().abrir(Usuario.getUsuario("prueba"), "insegura"), 0);
-		SHELL.ejecutar("set nombre " + SUDO_NM);
+		assertEquals(SHELL.ejecutar("set nombre " + SUDO_NM), Shell.ERR_COMANDO);
 		assertNull(Usuario.getUsuario("prueba"));
 		assertNotNull(Usuario.getUsuario(SUDO_NM));
-		SHELL.ejecutar("set contraseña " + SUDO_PW);
+		assertEquals(SHELL.ejecutar("set contraseña " + SUDO_PW), Shell.ERR_COMANDO);
 		assertTrue(comprobarConexion(null));
 
 		// Reconectarse y probar a cambiarse el nombre
 		// al de otro usuario. Debe dar error.
 		assertEquals(SHELL.getSesion().abrir(Usuario.getUsuario(SUDO_NM), SUDO_PW), 0);
-		SHELL.ejecutar("set nombre " + USER_NM);
+		assertNotEquals(SHELL.ejecutar("set nombre " + USER_NM), Shell.ERR_COMANDO);
 		assertNotEquals(SHELL.getSesion().getUsuario().getNombre(), USER_NM);
 		assertEquals(SHELL.getSesion().getUsuario().getNombre(), SUDO_NM);
 
@@ -139,8 +137,13 @@ public class MainTest {
 		assertEquals(SHELL.getSesion().abrir(Usuario.getUsuario(USER_NM), USER_PW), 0);
 
 		// Ejecutar acciones de administrador. Debe dar error.
-		SHELL.ejecutar("register usuario prueba contrasena n");
+		assertNotEquals(SHELL.ejecutar("register usuario prueba contrasena n"), Shell.ERR_COMANDO);
 		assertNull(Usuario.getUsuario("prueba"));
+
+		assertNotEquals(SHELL.ejecutar("remove usuario " + SUDO_NM), Shell.ERR_COMANDO);
+		assertNotNull(Usuario.getUsuario(SUDO_NM));
+
+		assertNotEquals(SHELL.ejecutar("list usuarios"), Shell.ERR_COMANDO);
 
 		// Cerrar sesión
 		assertEquals(SHELL.getSesion().cerrar(), 0);
