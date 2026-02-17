@@ -5,10 +5,11 @@ package dam.biblioteca.backend;
  *		Usuario de la biblioteca.
  *	</p>
  *	<p>
- *		Principalmente, puede tomar libros prestados y devolverlos.
- *		Además, si tiene permisos de administrador puede obtener
- *		información sobre otros usuarios y modificar los listados
- *		de libros y usuarios.
+ *		Principalmente, puede tomar libros prestados
+ *		y devolverlos. Además, si tiene permisos de
+ *		administrador puede obtener información sobre
+ *		otros usuarios y modificar los listados de
+ *		libros, usuarios y préstamos.
  *	</p>
  *	
  *	@author		Rubén Benítez Soler
@@ -39,7 +40,8 @@ public class Usuario {
 	 *		El constructor es privado. Para crear nuevos
 	 *		usuarios se debe usar la función
 	 *		{@link #registrar(String, String, boolean)}.
-	 *		Así se evita que existan usuarios no registrados.
+	 *		Así se evita que existan usuarios no registrados
+	 *		o con nombres nulos.
 	 *	</p>
 	 * 
 	 *	@param	nombre		Nombre del usuario
@@ -140,15 +142,16 @@ public class Usuario {
 	 *	</p>
 	 * 
 	 *	@param	newNombre	Nuevo nombre de usuario
-	 *	@return	Si se ha realizado la operación
+	 * 
+	 *	@return	Código de error (0 si no hay errores)
 	 */
-	public boolean setNombre(String newNombre) {
-		// ¿El nombre ya está cogido? Error.
-		if(getUsuario(newNombre) != null) return false;
+	public int setNombre(String newNombre) {
+		// ¿El nombre ya está cogido? Error 1.
+		if(getUsuario(newNombre) != null) return 1;
 
 		// Realizar operación.
 		this.nombre = newNombre;
-		return true;
+		return 0;
 	}
 
 	/**
@@ -156,15 +159,15 @@ public class Usuario {
 	 * 
 	 *	@param newContrasena Nueva contraseña
 	 * 
-	 *	@return	Si se ha realizado la operación
+	 *	@return	Código de error (0 si no hay errores)
 	 */
-	public boolean setContrasena(String newContrasena) {
+	public int setContrasena(String newContrasena) {
 		// ¿Es la misma contraseña que antes? Error.
-		if(tieneContrasena(newContrasena)) return false;
+		if(tieneContrasena(newContrasena)) return 1;
 
 		// Realizar operación.
 		this.contrasena = procesarContrasena(newContrasena);
-		return true;
+		return 0;
 	}
 
 	/**

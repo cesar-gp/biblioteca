@@ -1,5 +1,20 @@
 package dam.biblioteca.backend;
 
+/**
+ *	<p>
+ *		Representa un préstamo de un libro
+ *		a un usuario, que puede estar activo
+ *		o inactivo.
+ *	</p>
+ *	<p>
+ *		Todos los préstamos se guardan en
+ *		un registro dinámico.
+ *	</p>
+ * 
+ *	@author		César Gutiérrez Pérez
+ *	@author		Rubén Benítez Soler
+ *	@version	0
+ */
 public class Prestamo {
 
 	// Propiedades estáticas

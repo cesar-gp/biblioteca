@@ -1,7 +1,20 @@
 package dam.biblioteca.backend;
 
 import dam.biblioteca.enums.Categoria;
-	
+
+/**
+ *	<p>
+ *		Representa un libro de la biblioteca.
+ *	</p>
+ *	<p>
+ *		Todos los libros se guardan en un
+ *		registro dinámico.
+ *	</p>
+ * 
+ *	@author		César Gutiérrez Pérez
+ *	@author		Rubén Benítez Soler
+ *	@version	0
+ */
 public class Libro {
 
 	// Propiedades estáticas

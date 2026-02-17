@@ -8,9 +8,10 @@ import java.util.Scanner;
 
 /**
  *	<p>
- *		Implementación de una <em>shell</em>, un programa
+ *		Implementación de una <em>shell</em>: un programa
  *		en el que el usuario introduce comandos y recibe
- *		una respuesta del programa.
+ *		una respuesta que, habitualmente, indica los
+ *		cambios producidos al ejecutar el comando.
  *	</p>
  *	<p>
  *		La shell solo podrá tener una sesión abierta, y
@@ -189,6 +190,13 @@ public class Shell {
 
 	// Funciones: código compartido entre comandos.
 
+	/**
+	 *	Comprueba si el usuario tiene permisos
+	 *	de administrador y, en caso negativo,
+	 *	lo indica mediante un mensaje de error.
+	 * 
+	 *	@return	Si el usuario es administrador o no.
+	 */
 	private boolean comprobarPermisos() {
 		if(!this.sesion.getUsuario().isAdmin()) {
 			System.out.println("Error: permiso denegado.");
@@ -198,6 +206,11 @@ public class Shell {
 		return true;
 	}
 
+	/**
+	 *	Indica al usuario que ha escogido un tipo
+	 *	de dato que no está entre las opciones
+	 *	"usuario", "libro" y "prestamo".
+	 */
 	private void tipoIncorrecto() {
 		System.out.println("Error: tipo de dato desconocido.");
 		System.out.println("Valores válidos: usuario, libro, prestamo.");
@@ -205,6 +218,16 @@ public class Shell {
 
 	// Funciones: código ejecutable a través de comandos.
 
+	/**
+	 *	<p>
+	 *		Función del comando {@code list}.
+	 *	</p>
+	 *	<p>
+	 *		Lista los usuarios, libros o préstamos
+	 *		registrados en el programa. Solo puede
+	 *		ser ejecutado por un administrador.
+	 *	</p>
+	 */
 	private void list(String[] argv) {
 		// ¿El usuario no es administrador? Error.
 		if(!comprobarPermisos()) return;
@@ -241,6 +264,15 @@ public class Shell {
 		}
 	}
 
+	/**
+	 *	<p>
+	 *		Función del comando {@code register}.
+	 *	</p>
+	 *	<p>
+	 *		Registra usuarios, libros o préstamos.
+	 *		Solo puede ser ejecutado por un administrador.
+	 *	</p>
+	 */
 	private void register(String[] argv) {
 		// ¿El usuario no es administrador? Error.
 		if(!comprobarPermisos()) return;
@@ -300,7 +332,7 @@ public class Shell {
 						System.out.println("Error: el usuario '" + nombre + "' ya está registrado.");
 						break;
 					default:
-						System.out.println("Error: ha ocurrido un error desconocido al registrar al usuario.");
+						System.out.println("Error: fallo desconocido al registrar al usuario.");
 						break;
 				}
 
@@ -320,6 +352,17 @@ public class Shell {
 		}
 	}
 
+	/**
+	 *	<p>
+	 *		Función del comando {@code remove}.
+	 *	</p>
+	 *	<p>
+	 *		Borra usuarios, libros o préstamos. Si quien
+	 *		lo ejecuta no es administrador, borra su propia
+	 *		cuenta. De lo contrario, puede elegir qué
+	 *		usuario, libro o préstamo quiere borrar.
+	 *	</p>
+	 */
 	private void remove(String[] argv) {
 		// ¿El usuario no es administrador? Pedirle
 		// confirmación para borrar su propio usuario.
@@ -342,19 +385,26 @@ public class Shell {
 			case "usuario":
 				String nombre;
 
+				// Sacar nombre del usuario a borrar.
+				// ¿No es administrador? Sacar su propio nombre.
+				// ¿Sí lo es? Tercer argumento o su respuesta.
 				if(propia) nombre = this.sesion.getUsuario().getNombre();
 				else if(argv.length < 3) nombre = respuesta("Nombre: ", false);
 				else nombre = argv[2];
 
+				// Sacar usuario a borrar a partir del nombre.
 				Usuario objetivo;
 				if(propia) objetivo = this.sesion.getUsuario();
 				else objetivo = Usuario.getUsuario(nombre);
 
+				// ¿El usuario no existe? Error.
 				if(objetivo == null) {
 					System.out.println("Error: el usuario introducido no existe.");
 					break;
 				}
 
+				// Intentar eliminar el usuario
+				// e informar del resultado.
 				switch(objetivo.eliminar()) {
 					case 0:
 						System.out.println("Se ha eliminado el usuario '" + objetivo.getNombre() + "'.");
@@ -372,61 +422,102 @@ public class Shell {
 						System.out.println("Error: no se puede eliminar el usuario root.");
 						break;
 					default:
-						System.out.println("Error: ha ocurrido un error desconocido al intentar eliminar el usuario.");
+						System.out.println("Error: fallo desconocido al intentar eliminar el usuario.");
 						break;
 				}
 
 				break;
 			case "l":
 			case "libro":
+				// No soportado.
 				break;
 			case "p":
 			case "prestamo":
+				// No soportado.
 				break;
 			default:
+				// ¿Otro tipo? Error.
 				tipoIncorrecto();
 				break;
 		}
 	}
 
+	/**
+	 *	<p>
+	 *		Función del comando {@code set}.
+	 *	</p>
+	 *	<p>
+	 *		Cambia el valor de propiedades relacionadas
+	 *		con el usuario, como su nombre, contraseña
+	 *		y rol.
+	 *	</p>
+	 */
 	private void set(String[] argv) {
+		// Sacar campo del segundo argumento
+		// o de respuesta del usuario.
 		String campo;
 		if(argv.length < 2) campo = respuesta("Campo [nombre/contraseña/rol]: ", false);
 		else campo = argv[1];
 
+		// Inicializar variable con el nuevo
+		// valor del campo a cambiar.
 		String valor;
 
+		// Intentar cambiar el valor del cambio.
 		switch(campo) {
 			case "n": case "nom": case "nombre":
+				// Sacar valor del tercer argumento
+				// o de respuesta del usuario.
 				if(argv.length < 3) valor = respuesta("Nuevo nombre: ", false);
 				else valor = argv[2];
 
-				if(this.sesion.getUsuario().setNombre(valor))
-					System.out.println("Nombre cambiado.");
-				else
-					System.out.println("Error: el nombre ya está cogido.");
+				// Intentar cambiar el nombre e informar del resultado.
+				switch(this.sesion.getUsuario().setNombre(valor)) {
+					case 0:
+						System.out.println("Nombre cambiado.");
+						break;
+					case 1:
+						System.out.println("Error: el nombre ya está cogido.");
+						break;
+					default:
+						System.out.println("Error: fallo desconocido al cambiar el nombre.");
+				}
 
 				break;
 			case "c": case "con": case "contraseña":
+				// Sacar valor del tercer argumento
+				// o de respuesta del usuario.
 				if(argv.length < 3) valor = respuesta("Nueva contraseña: ", true);
 				else valor = argv[2];
 
-				if(this.sesion.getUsuario().setContrasena(valor)) {
-					System.out.println("Contraseña cambiada.");
+				// Intentar cambiar la contraseña e informar del resultado.
+				switch(this.sesion.getUsuario().setContrasena(valor)) {
+					case 0:
+						System.out.println("Contraseña cambiada.");
 
-					this.sesion.cerrar();
-					System.out.println("Se ha cerrado la sesión.");
-				} else {
-					System.out.println("Error: ya tienes esa contraseña.");
+						// Cerrar la sesión al cambiar la contraseña.
+						this.sesion.cerrar();
+						System.out.println("Se ha cerrado la sesión.");
+						break;
+					case 1:
+						System.out.println("Error: ya tienes esa contraseña.");
+						break;
+					default:
+						System.out.println("Error: fallo desconocido al cambiar la contraseña.");
 				}
 				
 				break;
 			case "r": case "rol":
+				// ¿No es administrador? Error.
 				if(!comprobarPermisos()) return;
 
+				// Sacar valor del tercer argumento
+				// o de respuesta del usuario.
 				if(argv.length < 3) valor = respuesta("Nuevos permisos [administrador/usuario]: ", false);
 				else valor = argv[2];
 
+				// Transformar String recibida en
+				// rol (usuario o administrador).
 				boolean newAdmin;
 				switch(valor) {
 					case "a": case "admin": case "administrador":
@@ -441,16 +532,22 @@ public class Shell {
 						return;
 				}
 
+				// Sacar nombre del usuario afectado
+				// del cuarto argumento o de respuesta
+				// del usuario.
 				String nombre;
 				if(argv.length < 4) nombre = respuesta("Usuario: ", false);
 				else nombre = argv[3];
 
+				// Sacar usuario a partir del nombre.
+				// ¿No existe? Error.
 				Usuario usuario = Usuario.getUsuario(nombre);
 				if(usuario == null) {
 					System.out.println("Error: el usuario '" + nombre + "' no existe.");
 					return;
 				}
 
+				// Intentar cambiar el rol e informar del resultado.
 				switch(usuario.setAdmin(newAdmin)) {
 					case 0:
 						String rol = "administrador";
@@ -468,13 +565,23 @@ public class Shell {
 
 				break;
 			default:
+				// ¿Otro campo? Error.
 				System.out.println("Error: campo no reconocido.");
 				System.out.println("Valores válidos: nombre, contraseña, rol.");
 				break;
 		}
 	}
 
+	/**
+	 *	<p>
+	 *		Función del comando {@code logout}.
+	 *	</p>
+	 *	<p>
+	 *		Cierra la sesión del usuario.
+	 *	</p>
+	 */
 	private void logout() {
+		// Intentar cerrar sesión e informar del resultado.
 		switch(this.sesion.cerrar()) {
 			case 0:
 				System.out.println("Sesión cerrada.");
@@ -483,7 +590,7 @@ public class Shell {
 				System.out.println("Error: no hay ningún usuario conectado.");
 				break;
 			default:
-				System.out.println("Error: ha ocurrido un error desconocido al cerrar sesión.");
+				System.out.println("Error: fallo desconocido al cerrar sesión.");
 				break;
 		}
 	}
@@ -652,7 +759,7 @@ public class Shell {
 						System.out.println("\nError: nombre o contraseña incorrectos.");
 						break;
 					default:
-						System.out.println("\nError: ha ocurrido un error desconocido al iniciar sesión.");
+						System.out.println("\nError: fallo desconocido al iniciar sesión.");
 						break;
 				}
 			} else {

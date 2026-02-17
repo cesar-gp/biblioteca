@@ -5,8 +5,9 @@ import dam.biblioteca.frontend.Shell;
 /**
  *	Clase principal del proyecto "Biblioteca".
  * 
- *	@author Rubén Benítez Soler
- *	@author César Gutiérrez Pérez
+ *	@author 	Rubén Benítez Soler
+ *	@author 	César Gutiérrez Pérez
+ *	@version	0
  */
 public class Main {
 

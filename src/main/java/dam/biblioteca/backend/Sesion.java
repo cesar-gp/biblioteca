@@ -1,5 +1,13 @@
 package dam.biblioteca.backend;
 
+/**
+ *	Representa una sesión que se puede
+ *	abrir o cerrar para distintos usuarios.
+ * 
+ *	@author		César Gutiérrez Pérez
+ *	@author 	Rubén Benítez Soler
+ *	@version	0
+ */
 public class Sesion {
 
 	// Propiedades no estáticas
