@@ -65,7 +65,7 @@ public class Shell {
 	/**
 	 *	Devuelve si la shell está abierta o no.
 	 * 
-	 *	@return	Si la shell está abierta o no.
+	 *	@return	Si la shell está abierta o no
 	 */
 	public boolean isAbierta() {
 		return this.abierta;
@@ -74,7 +74,7 @@ public class Shell {
 	/**
 	 *	Devuelve el último código de error.
 	 * 
-	 *	@return	Último código de error.
+	 *	@return	Último código de error
 	 */
 	public int getCodigoError() {
 		return this.codigoError;
@@ -89,7 +89,16 @@ public class Shell {
 		return this.sesion;
 	}
 
-	// Funciones: lectura de respuestas del usuario.
+	// Funciones: mensajes al usuario y lectura de sus respuestas.
+
+	private void imprimir(Object mensaje) {
+		if(!this.abierta) return;
+		System.out.println(mensaje);
+	}
+
+	private void imprimir() {
+		imprimir("");
+	}
 
 	/**
 	 *	<p>
@@ -101,12 +110,14 @@ public class Shell {
 	 *		Esto es especialmente útil para preguntar contraseñas.
 	 *	</p>
 	 * 
-	 *	@param	msg		Mensaje a mostrar.
-	 *	@param	ocultar	Si se ocultará o no la respuesta del usuario.
+	 *	@param	msg		Mensaje a mostrar
+	 *	@param	ocultar	Si se ocultará o no la respuesta del usuario
 	 * 
-	 *	@return	Respuesta del usuario.
+	 *	@return	Respuesta del usuario
 	 */
 	private String respuesta(String msg, boolean ocultar) {
+		if(!this.abierta) return "";
+
 		// Mostrar mensaje.
 		System.out.print(msg);
 
@@ -148,10 +159,10 @@ public class Shell {
 	 *		</li>
 	 *	</ul>
 	 * 
-	 *	@param	in				String a convertir.
-	 *	@param	predeterminada	Valor predeterminado.
+	 *	@param	in				String a convertir
+	 *	@param	predeterminada	Valor predeterminado
 	 * 
-	 *	@return	Conversión de la String a Boolean.
+	 *	@return	Conversión de la String a Boolean
 	 */
 	private Boolean stringABoolean(String in, Boolean predeterminada, boolean forzar) {
 		if(in.equalsIgnoreCase("y"))
@@ -197,10 +208,10 @@ public class Shell {
 	 *		{@code null}) se indica en el segundo argumento.
 	 *	</p>
 	 * 
-	 *	@param	msg				Mensaje a mostrar.
-	 *	@param	predeterminada	Respuesta predeterminada.
+	 *	@param	msg				Mensaje a mostrar
+	 *	@param	predeterminada	Respuesta predeterminada
 	 * 
-	 *	@return	Respuesta del usuario convertida a boolean.
+	 *	@return	Respuesta del usuario convertida a boolean
 	 */
 	private boolean respuestaBinaria(String msg, Boolean predeterminada) {
 		// Poner en mayúsculas el valor predeterminado, si existe.
@@ -215,9 +226,15 @@ public class Shell {
 		String respuesta = respuesta(msg + " [" + yes + "/" + no + "] ", false);
 		Boolean out = stringABoolean(respuesta, predeterminada, false);
 
-		// ¿Valor inválido? Volver a preguntar. ¿Válido? Devolver.
-		if(out == null) return respuestaBinaria(msg, predeterminada);
-		else return out;
+		// ¿Valor inválido? Volver a preguntar.
+		// Si la shell no está abierta, asumir 'false'.
+		if(out == null) {
+			if(!this.abierta) return false;
+			return respuestaBinaria(msg, predeterminada);
+		}
+
+		// Devolver valor.
+		return out;
 	}
 
 	// Funciones: código compartido entre comandos.
@@ -227,11 +244,11 @@ public class Shell {
 	 *	de administrador y, en caso negativo,
 	 *	lo indica mediante un mensaje de error.
 	 * 
-	 *	@return	Si el usuario es administrador o no.
+	 *	@return	Si el usuario es administrador o no
 	 */
 	private boolean comprobarPermisos() {
 		if(!this.sesion.getUsuario().isAdmin()) {
-			System.out.println("Error: permiso denegado.");
+			imprimir("Error: permiso denegado.");
 			return false;
 		}
 
@@ -244,8 +261,8 @@ public class Shell {
 	 *	"usuario", "libro" y "prestamo".
 	 */
 	private void tipoIncorrecto() {
-		System.out.println("Error: tipo de dato desconocido.");
-		System.out.println("Valores válidos: usuario, libro, prestamo.");
+		imprimir("Error: tipo de dato desconocido.");
+		imprimir("Valores válidos: usuario, libro, prestamo.");
 	}
 
 	// Funciones: código ejecutable a través de comandos.
@@ -275,16 +292,16 @@ public class Shell {
 		switch(tipo) {
 			case "u": case "usuario": case "usuarios":
 				// Mostrar lista de usuarios.
-				System.out.println(Listas.lista(Usuario.getUsuarios(), true));
+				imprimir(Listas.lista(Usuario.getUsuarios(), true));
 				return ERR_COMANDO;
 			case "l": case "libro": case "libros":
 				// Mostrar lista de libros.
-				System.out.println(Listas.lista(Libro.getLibros(), true));
+				imprimir(Listas.lista(Libro.getLibros(), true));
 				return ERR_COMANDO;
 			case "p": case "prestamo": case "préstamo":
 			case "prestamos": case "préstamos":
 				// Mostrar lista de préstamos.
-				System.out.println(Listas.lista(Prestamo.getPrestamos(), true));
+				imprimir(Listas.lista(Prestamo.getPrestamos(), true));
 				return ERR_COMANDO;
 			default:
 				// ¿Otro tipo? Error.
@@ -345,21 +362,23 @@ public class Shell {
 				int err = Usuario.registrar(nombre, contrasena, administrador);
 				switch(err) {
 					case 0:
-						System.out.print("Se ha registrado el usuario '" + nombre + "'");
-						if(administrador) System.out.print(" con permisos de administrador");
-						System.out.println('.');
+						String mensaje = "Se ha registrado el usuario '" + nombre + "'";
+						if(administrador) mensaje += " con permisos de administrador";
+						mensaje += '.';
+
+						imprimir(mensaje);
 						break;
 					case 1:
-						System.out.println("Error: se ha alcanzado el máximo de usuarios.");
+						imprimir("Error: se ha alcanzado el máximo de usuarios.");
 						break;
 					case 2:
-						System.out.println("Error: no se admiten nombres nulos o vacíos.");
+						imprimir("Error: no se admiten nombres nulos o vacíos.");
 						break;
 					case 3:
-						System.out.println("Error: el usuario '" + nombre + "' ya está registrado.");
+						imprimir("Error: el usuario '" + nombre + "' ya está registrado.");
 						break;
 					default:
-						System.out.println("Error: fallo desconocido al registrar al usuario.");
+						imprimir("Error: fallo desconocido al registrar al usuario.");
 						break;
 				}
 
@@ -430,7 +449,7 @@ public class Shell {
 
 				// ¿El usuario no existe? Error.
 				if(objetivo == null) {
-					System.out.println("Error: el usuario introducido no existe.");
+					imprimir("Error: el usuario introducido no existe.");
 					return ERR_ARGUMENTO + 2;
 				}
 
@@ -439,22 +458,22 @@ public class Shell {
 				int err = objetivo.eliminar();
 				switch(err) {
 					case 0:
-						System.out.println("Se ha eliminado el usuario '" + objetivo.getNombre() + "'.");
+						imprimir("Se ha eliminado el usuario '" + objetivo.getNombre() + "'.");
 
 						if(this.sesion.getUsuario() == objetivo) {
 							this.sesion.cerrar();
-							System.out.println("Se ha cerrado la sesión.");
+							imprimir("Se ha cerrado la sesión.");
 						}
 
 						break;
 					case 1:
-						System.out.println("Error: el usuario no está registrado.");
+						imprimir("Error: el usuario no está registrado.");
 						break;
 					case 2:
-						System.out.println("Error: no se puede eliminar el usuario root.");
+						imprimir("Error: no se puede eliminar el usuario root.");
 						break;
 					default:
-						System.out.println("Error: fallo desconocido al intentar eliminar el usuario.");
+						imprimir("Error: fallo desconocido al intentar eliminar el usuario.");
 						break;
 				}
 
@@ -511,13 +530,16 @@ public class Shell {
 				err = this.sesion.getUsuario().setNombre(valor);
 				switch(err) {
 					case 0:
-						System.out.println("Nombre cambiado.");
+						imprimir("Nombre cambiado.");
 						break;
 					case 1:
-						System.out.println("Error: el nombre ya está cogido.");
+						imprimir("Error: el nombre ya está cogido.");
+						break;
+					case 2:
+						imprimir("Error: el nombre no puede estar vacío.");
 						break;
 					default:
-						System.out.println("Error: fallo desconocido al cambiar el nombre.");
+						imprimir("Error: fallo desconocido al cambiar el nombre.");
 						break;
 				}
 
@@ -532,17 +554,17 @@ public class Shell {
 				err = this.sesion.getUsuario().setContrasena(valor);
 				switch(err) {
 					case 0:
-						System.out.println("Contraseña cambiada.");
+						imprimir("Contraseña cambiada.");
 
 						// Cerrar la sesión al cambiar la contraseña.
 						this.sesion.cerrar();
-						System.out.println("Se ha cerrado la sesión.");
+						imprimir("Se ha cerrado la sesión.");
 						break;
 					case 1:
-						System.out.println("Error: ya tienes esa contraseña.");
+						imprimir("Error: ya tienes esa contraseña.");
 						break;
 					default:
-						System.out.println("Error: fallo desconocido al cambiar la contraseña.");
+						imprimir("Error: fallo desconocido al cambiar la contraseña.");
 				}
 				
 				return ERR_COMANDO + err;
@@ -566,8 +588,8 @@ public class Shell {
 						newAdmin = false;
 						break;
 					default:
-						System.out.println("Error: rol no reconocido.");
-						System.out.println("Valores válidos: usuario, administrador.");
+						imprimir("Error: rol no reconocido.");
+						imprimir("Valores válidos: usuario, administrador.");
 						return ERR_ARGUMENTO + 2;
 				}
 
@@ -582,7 +604,7 @@ public class Shell {
 				// ¿No existe? Error.
 				Usuario usuario = Usuario.getUsuario(nombre);
 				if(usuario == null) {
-					System.out.println("Error: el usuario '" + nombre + "' no existe.");
+					imprimir("Error: el usuario '" + nombre + "' no existe.");
 					return ERR_ARGUMENTO + 3;
 				}
 
@@ -593,21 +615,21 @@ public class Shell {
 						String rol = "administrador";
 						if(!newAdmin) rol = "usuario";
 
-						System.out.println("El usuario '" + usuario.getNombre() + "' ahora es " + rol + ".");
+						imprimir("El usuario '" + usuario.getNombre() + "' ahora es " + rol + ".");
 						break;
 					case 1:
-						System.out.println("Error: no se puede modificar el rol del usuario root.");
+						imprimir("Error: no se puede modificar el rol del usuario root.");
 						break;
 					case 2:
-						System.out.println("Error: el usuario '" + usuario.getNombre() + "' ya tiene asignado ese rol.");
+						imprimir("Error: el usuario '" + usuario.getNombre() + "' ya tiene asignado ese rol.");
 						break;
 				}
 
 				return ERR_COMANDO + err;
 			default:
 				// ¿Otro campo? Error.
-				System.out.println("Error: campo no reconocido.");
-				System.out.println("Valores válidos: nombre, contraseña, rol.");
+				imprimir("Error: campo no reconocido.");
+				imprimir("Valores válidos: nombre, contraseña, rol.");
 				
 				return ERR_ARGUMENTO + 1;
 		}
@@ -640,7 +662,7 @@ public class Shell {
 		else if(this.codigoError == ERR_INICIO)
 			mensaje = "todavía no se ha ejecutado ningún comando";
 
-		System.out.println(this.codigoError + ": " + mensaje + ".");
+		imprimir(this.codigoError + ": " + mensaje + ".");
 		return ERR_COMANDO;
 	}
 
@@ -659,13 +681,13 @@ public class Shell {
 		int err = this.sesion.cerrar();
 		switch(err) {
 			case 0:
-				System.out.println("Sesión cerrada.");
+				imprimir("Sesión cerrada.");
 				break;
 			case 1:
-				System.out.println("Error: no hay ningún usuario conectado.");
+				imprimir("Error: no hay ningún usuario conectado.");
 				break;
 			default:
-				System.out.println("Error: fallo desconocido al cerrar sesión.");
+				imprimir("Error: fallo desconocido al cerrar sesión.");
 				break;
 		}
 
@@ -729,7 +751,7 @@ public class Shell {
 			"   Cierra el programa.";
 
 		// Mostrar texto completo.
-		System.out.println(out);
+		imprimir(out);
 
 		// Operación realizada.
 		return ERR_COMANDO;
@@ -751,7 +773,7 @@ public class Shell {
 		String[] argv = cmd.split(" ");
 
 		if(this.sesion.getUsuario() == null) {
-			System.out.println("Error crítico: sesión inválida.");
+			imprimir("Error: sesión inválida.");
 			return ERR_AUTENTICACION;
 		}
 
@@ -775,8 +797,8 @@ public class Shell {
 				this.abierta = false;
 				return ERR_COMANDO;
 			default:
-				System.out.println("Error: no se reconoce '" + argv[0] + "' como comando.");
-				System.out.println("Pon 'help' para ver la lista de comandos.");
+				imprimir("Error: no se reconoce '" + argv[0] + "' como comando.");
+				imprimir("Pon 'help' para ver la lista de comandos.");
 				return ERR_ARGUMENTO;
 		}
 	}
@@ -790,17 +812,17 @@ public class Shell {
 	public void abrir() {
 		this.abierta = true;
 
-		System.out.println("\n--");
-		System.out.println("¡Hola! Si es la primera vez que usas el programa,");
-		System.out.println("pon el nombre de usuario 'root' para empezar.");
-		System.out.println();
-		System.out.println("El usuario 'root' no tiene contraseña, pero es muy");
-		System.out.println("recomendable que le asignes una antes de empezar a");
-		System.out.println("añadir libros, usuarios y préstamos.");
-		System.out.println();
-		System.out.println("Si tan solo quieres cerrar el programa, pon un");
-		System.out.println("nombre de usuario vacío.");
-		System.out.println("--");
+		imprimir("\n--");
+		imprimir("¡Hola! Si es la primera vez que usas el programa,");
+		imprimir("pon el nombre de usuario 'root' para empezar.");
+		imprimir();
+		imprimir("El usuario 'root' no tiene contraseña, pero es muy");
+		imprimir("recomendable que le asignes una antes de empezar a");
+		imprimir("añadir libros, usuarios y préstamos.");
+		imprimir();
+		imprimir("Si tan solo quieres cerrar el programa, pon un");
+		imprimir("nombre de usuario vacío.");
+		imprimir("--");
 
 		while(abierta) {
 			Usuario con = this.sesion.getUsuario();
@@ -829,22 +851,22 @@ public class Shell {
 				// En cualquier otro caso, intentar abrir sesión.
 				switch(this.sesion.abrir(con, contrasena)) {
 					case 0:
-						System.out.println("\n¡Bienvenido a la biblioteca, " + con.getNombre() + "! <3");
-						System.out.println("Pon 'help' para ver la lista de comandos.");
+						imprimir("\n¡Bienvenido a la biblioteca, " + con.getNombre() + "! <3");
+						imprimir("Pon 'help' para ver la lista de comandos.");
 						if(con.isAdmin()) {
-							System.out.println("\nTienes permisos de administrador, revisa bien");
-							System.out.println("lo que escribes antes de ejecutarlo.");
+							imprimir("\nTienes permisos de administrador, revisa bien");
+							imprimir("lo que escribes antes de ejecutarlo.");
 						}
 						break;
 					case 1:
-						System.out.println("\nError: ya hay un usuario conectado.");
+						imprimir("\nError: ya hay un usuario conectado.");
 						break;
 					case 2:
 					case 3:
-						System.out.println("\nError: nombre o contraseña incorrectos.");
+						imprimir("\nError: nombre o contraseña incorrectos.");
 						break;
 					default:
-						System.out.println("\nError: fallo desconocido al iniciar sesión.");
+						imprimir("\nError: fallo desconocido al iniciar sesión.");
 						break;
 				}
 			} else {

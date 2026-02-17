@@ -149,6 +149,12 @@ public class Usuario {
 		// ¿El nombre ya está cogido? Error 1.
 		if(getUsuario(newNombre) != null) return 1;
 
+		// ¿El nombre es nulo o está vacío? Error 2.
+		if(newNombre == null ||
+			newNombre.isEmpty() ||
+			newNombre.isBlank())
+			return 2;
+
 		// Realizar operación.
 		this.nombre = newNombre;
 		return 0;
