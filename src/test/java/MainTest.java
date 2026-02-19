@@ -6,6 +6,8 @@ import dam.biblioteca.Shell;
 
 public class MainTest {
 
+	// TODO: añadir tests para respuestaBinaria
+
 	// Constantes
 
 	public static final Shell SHELL = new Shell();
@@ -99,7 +101,7 @@ public class MainTest {
 		seConecta("prueba", "insegura", true, true);							// Abrir sesión: 'prueba'.
 		funciona("set nombre " + SUDO_NM, true);								// Cambiar nombre.
 		assertNull(USUARIOS.getUsuario("prueba"));								// 'prueba' no existe.
-		assertTrue(USUARIOS.isRegistrado(SUDO_NM));							// 'sudo' existe.
+		assertTrue(USUARIOS.isRegistrado(SUDO_NM));								// 'sudo' existe.
 		funciona("set contraseña " + SUDO_PW, true);							// Cambiar contraseña.
 		sesionCerrada(true);													// Sesión cerrada.
 
@@ -119,8 +121,8 @@ public class MainTest {
 		funciona("remove usuario " + SUDO_NM, false);							// Eliminar a 'sudo' (no).
 		assertTrue(USUARIOS.isRegistrado(SUDO_NM));								// 'sudo' existe.
 		funciona("list usuarios", false);										// Listar usuarios (no).
-
 		funciona("logout", true);												// Cerrar sesión.
+
 		sesionCerrada(true);													// Sesión cerrada.
 	}
 

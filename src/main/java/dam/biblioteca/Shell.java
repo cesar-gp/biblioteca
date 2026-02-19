@@ -471,7 +471,7 @@ public class Shell {
 		if(!gUsuarios.getConectado().isAdmin()) {
 			// Averiguar si quiere continuar con la ejecución
 			// del comando. Preguntar o sacar segundo argumento.
-			if(argv.length < 2) respuestaBinaria("Este comando eliminará tu propio usuario, ¿quieres continuar?", false);
+			if(argv.length < 2) noAdmin = respuestaBinaria("Este comando eliminará tu propio usuario, ¿quieres continuar?", false);
 			else noAdmin = stringABoolean(argv[1], false, true);
 			
 			// Detener la ejecución si no quiere continuar.
