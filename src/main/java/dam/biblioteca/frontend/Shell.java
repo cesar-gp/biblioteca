@@ -1,9 +1,6 @@
 package dam.biblioteca.frontend;
 
-import dam.biblioteca.backend.Usuario;
-import dam.biblioteca.backend.Libro;
-import dam.biblioteca.backend.Prestamo;
-import dam.biblioteca.backend.Sesion;
+import dam.biblioteca.backend.GestorUsuarios;
 import java.util.Scanner;
 
 /**
@@ -25,8 +22,6 @@ import java.util.Scanner;
 public class Shell {
 	
 	// Constantes
-	
-	private static final Scanner SCANNER = new Scanner(System.in);
 
 	// Código de error inicial.
 	public static final int ERR_INICIO = -1;
@@ -48,19 +43,33 @@ public class Shell {
 
 	// Propiedades no estáticas
 
+	private final Scanner scanner;
+	private final GestorUsuarios gUsuarios;
+
 	private boolean abierta;
 	private int codigoError;
-	private Sesion sesion;
 
 	// Constructores
 
 	public Shell() {
+		scanner = new Scanner(System.in);
+		gUsuarios = new GestorUsuarios();
+
 		this.abierta = false;
 		this.codigoError = ERR_INICIO;
-		this.sesion = new Sesion();
 	}
 
 	// Getters
+
+	/**
+	 *	Devuelve el gestor de usuarios de la
+	 *	shell.
+	 * 
+	 *	@return	Gestor de usuarios de la shell
+	 */
+	public GestorUsuarios getGestorUsuarios() {
+		return this.gUsuarios;
+	}
 
 	/**
 	 *	Devuelve si la shell está abierta o no.
@@ -80,22 +89,21 @@ public class Shell {
 		return this.codigoError;
 	}
 
-	/**
-	 *	Devuelve la sesión actual.
-	 * 
-	 *	@return	Sesión actual
-	 */
-	public Sesion getSesion() {
-		return this.sesion;
-	}
-
 	// Funciones: mensajes al usuario y lectura de sus respuestas.
 
+	/**
+	 *	Imprime la representación de un objeto como String
+	 *	en la pantalla, pero solo si la shell está abierta.
+	 */
 	private void imprimir(Object mensaje) {
 		if(!this.abierta) return;
 		System.out.println(mensaje);
 	}
 
+	/**
+	 *	Llama a {@link #imprimir(Object)} para que imprima
+	 *	un texto vacío.
+	 */
 	private void imprimir() {
 		imprimir("");
 	}
@@ -125,7 +133,7 @@ public class Shell {
 		// si es posible, porque puede ocultar los caracteres
 		// escritos por el usuario.
 		if(System.console() == null) {
-			return SCANNER.nextLine();
+			return scanner.nextLine();
 		} else {
 			if(ocultar) return new String(System.console().readPassword());
 			else return System.console().readLine();
@@ -247,7 +255,7 @@ public class Shell {
 	 *	@return	Si el usuario es administrador o no
 	 */
 	private boolean comprobarPermisos() {
-		if(!this.sesion.getUsuario().isAdmin()) {
+		if(!gUsuarios.getConectado().isAdmin()) {
 			imprimir("Error: permiso denegado.");
 			return false;
 		}
@@ -292,16 +300,16 @@ public class Shell {
 		switch(tipo) {
 			case "u": case "usuario": case "usuarios":
 				// Mostrar lista de usuarios.
-				imprimir(Listas.lista(Usuario.getUsuarios(), true));
+				imprimir(Listas.lista(gUsuarios.getUsuarios(), true));
 				return ERR_COMANDO;
 			case "l": case "libro": case "libros":
 				// Mostrar lista de libros.
-				imprimir(Listas.lista(Libro.getLibros(), true));
+				// TODO: no soportado.
 				return ERR_COMANDO;
 			case "p": case "prestamo": case "préstamo":
 			case "prestamos": case "préstamos":
 				// Mostrar lista de préstamos.
-				imprimir(Listas.lista(Prestamo.getPrestamos(), true));
+				// TODO: no soportado.
 				return ERR_COMANDO;
 			default:
 				// ¿Otro tipo? Error.
@@ -345,11 +353,6 @@ public class Shell {
 				if(argv.length < 4) contrasena = respuesta("Contraseña: ", true);
 				else contrasena = argv[3];
 
-				// Si la contraseña está vacía, asignarle un
-				// valor nulo (no tiene contraseña).
-				if(contrasena.isEmpty() || contrasena.isBlank())
-					contrasena = null;
-
 				// Especificar si tiene permisos de administrador,
 				// o coger la respuesta del cuarto argumento,
 				// si existe.
@@ -359,7 +362,7 @@ public class Shell {
 
 				// Intentar registrar al usuario y mostrar
 				// mensaje indicando si se ha realizado la operación.
-				int err = Usuario.registrar(nombre, contrasena, administrador);
+				int err = gUsuarios.registrar(nombre, contrasena, administrador);
 				switch(err) {
 					case 0:
 						String mensaje = "Se ha registrado el usuario '" + nombre + "'";
@@ -372,7 +375,7 @@ public class Shell {
 						imprimir("Error: se ha alcanzado el máximo de usuarios.");
 						break;
 					case 2:
-						imprimir("Error: no se admiten nombres nulos o vacíos.");
+						imprimir("Error: el nombre solo puede contener letras, números, barrabajas y guiones.");
 						break;
 					case 3:
 						imprimir("Error: el usuario '" + nombre + "' ya está registrado.");
@@ -413,7 +416,7 @@ public class Shell {
 		// ¿El usuario no es administrador? Pedirle
 		// confirmación para borrar su propio usuario.
 		boolean noAdmin = false;
-		if(!this.sesion.getUsuario().isAdmin()) {
+		if(!gUsuarios.getConectado().isAdmin()) {
 			// Averiguar si quiere continuar con la ejecución
 			// del comando. Preguntar o sacar segundo argumento.
 			if(argv.length < 2) respuestaBinaria("Este comando eliminará tu propio usuario, ¿quieres continuar?", false);
@@ -438,33 +441,16 @@ public class Shell {
 				// Sacar nombre del usuario a borrar.
 				// ¿No es administrador? Sacar su propio nombre.
 				// ¿Sí lo es? Tercer argumento o su respuesta.
-				if(noAdmin) nombre = this.sesion.getUsuario().getNombre();
+				if(noAdmin) nombre = gUsuarios.getConectado().getNombre();
 				else if(argv.length < 3) nombre = respuesta("Nombre: ", false);
 				else nombre = argv[2];
 
-				// Sacar usuario a borrar a partir del nombre.
-				Usuario objetivo;
-				if(noAdmin) objetivo = this.sesion.getUsuario();
-				else objetivo = Usuario.getUsuario(nombre);
-
-				// ¿El usuario no existe? Error.
-				if(objetivo == null) {
-					imprimir("Error: el usuario introducido no existe.");
-					return ERR_ARGUMENTO + 2;
-				}
-
 				// Intentar eliminar el usuario
 				// e informar del resultado.
-				int err = objetivo.eliminar();
+				int err = gUsuarios.eliminar(nombre);
 				switch(err) {
 					case 0:
-						imprimir("Se ha eliminado el usuario '" + objetivo.getNombre() + "'.");
-
-						if(this.sesion.getUsuario() == objetivo) {
-							this.sesion.cerrar();
-							imprimir("Se ha cerrado la sesión.");
-						}
-
+						imprimir("Se ha eliminado el usuario '" + nombre + "'.");
 						break;
 					case 1:
 						imprimir("Error: el usuario no está registrado.");
@@ -527,15 +513,18 @@ public class Shell {
 				else valor = argv[2];
 
 				// Intentar cambiar el nombre e informar del resultado.
-				err = this.sesion.getUsuario().setNombre(valor);
+				err = gUsuarios.cambiarNombre(gUsuarios.getConectado(), valor);
 				switch(err) {
 					case 0:
 						imprimir("Nombre cambiado.");
 						break;
 					case 1:
-						imprimir("Error: el nombre ya está cogido.");
+						imprimir("Error: el usuario no está registrado, ¿está la shell cerrada?");
 						break;
 					case 2:
+						imprimir("Error: el nombre ya está cogido.");
+						break;
+					case 3:
 						imprimir("Error: el nombre no puede estar vacío.");
 						break;
 					default:
@@ -551,14 +540,10 @@ public class Shell {
 				else valor = argv[2];
 
 				// Intentar cambiar la contraseña e informar del resultado.
-				err = this.sesion.getUsuario().setContrasena(valor);
+				err = gUsuarios.cambiarContrasena(gUsuarios.getConectado(), valor);
 				switch(err) {
 					case 0:
 						imprimir("Contraseña cambiada.");
-
-						// Cerrar la sesión al cambiar la contraseña.
-						this.sesion.cerrar();
-						imprimir("Se ha cerrado la sesión.");
 						break;
 					case 1:
 						imprimir("Error: ya tienes esa contraseña.");
@@ -600,28 +585,20 @@ public class Shell {
 				if(argv.length < 4) nombre = respuesta("Usuario: ", false);
 				else nombre = argv[3];
 
-				// Sacar usuario a partir del nombre.
-				// ¿No existe? Error.
-				Usuario usuario = Usuario.getUsuario(nombre);
-				if(usuario == null) {
-					imprimir("Error: el usuario '" + nombre + "' no existe.");
-					return ERR_ARGUMENTO + 3;
-				}
-
 				// Intentar cambiar el rol e informar del resultado.
-				err = usuario.setAdmin(newAdmin);
+				err = gUsuarios.cambiarRol(gUsuarios.getUsuario(nombre), newAdmin);
 				switch(err) {
 					case 0:
 						String rol = "administrador";
 						if(!newAdmin) rol = "usuario";
 
-						imprimir("El usuario '" + usuario.getNombre() + "' ahora es " + rol + ".");
+						imprimir("El usuario '" + nombre + "' ahora es " + rol + ".");
 						break;
 					case 1:
 						imprimir("Error: no se puede modificar el rol del usuario root.");
 						break;
 					case 2:
-						imprimir("Error: el usuario '" + usuario.getNombre() + "' ya tiene asignado ese rol.");
+						imprimir("Error: el usuario '" + nombre + "' ya tiene asignado ese rol.");
 						break;
 				}
 
@@ -678,7 +655,7 @@ public class Shell {
 	 */
 	private int logout() {
 		// Intentar cerrar sesión e informar del resultado.
-		int err = this.sesion.cerrar();
+		int err = gUsuarios.desconectar();
 		switch(err) {
 			case 0:
 				imprimir("Sesión cerrada.");
@@ -710,7 +687,7 @@ public class Shell {
 		// Crear texto vacío.
 		String out = "";
 
-		if(this.sesion.getUsuario().isAdmin()) {
+		if(gUsuarios.getConectado().isAdmin()) {
 			// Añadir descripciones únicas para administradores.
 			out +=
 				" - list\n" +
@@ -772,7 +749,7 @@ public class Shell {
 		// Separar el comando en argumentos.
 		String[] argv = cmd.split(" ");
 
-		if(this.sesion.getUsuario() == null) {
+		if(gUsuarios.getConectado() == null) {
 			imprimir("Error: sesión inválida.");
 			return ERR_AUTENTICACION;
 		}
@@ -825,9 +802,7 @@ public class Shell {
 		imprimir("--");
 
 		while(abierta) {
-			Usuario con = this.sesion.getUsuario();
-
-			if(con == null) {
+			if(gUsuarios.getConectado() == null) {
 				// Limpiar código de error anterior.
 				this.codigoError = ERR_INICIO;
 
@@ -835,25 +810,27 @@ public class Shell {
 				String nombre = respuesta("\nUsuario: ", false);
 
 				// Si el nombre está vacío, salir del programa.
-				if(nombre == null || nombre.isEmpty() || nombre.isBlank()) {
+				if(nombre.isEmpty()) {
 					abierta = false;
 					break;
 				}
 
-				// Conseguir datos del usuario con ese nombre.
-				con = Usuario.getUsuario(nombre);
+				// Intentar iniciar sesión sin contraseña.
+				int err = gUsuarios.conectar(nombre, null);
 
-				// Pedir su contraseña, si procede.
-				String contrasena = null;
-				if(con == null || con.tieneContrasena())
-					contrasena = respuesta("Contraseña: ", true);
+				// Si hay algún error, pedir la contraseña
+				// y volver a intentar el inicio de sesión.
+				if(err != 0) {
+					String contrasena = respuesta("Contraseña: ", true);
+					err = gUsuarios.conectar(nombre, contrasena);
+				}
 
-				// En cualquier otro caso, intentar abrir sesión.
-				switch(this.sesion.abrir(con, contrasena)) {
+				// Indicar resultado de la operación.
+				switch(err) {
 					case 0:
-						imprimir("\n¡Bienvenido a la biblioteca, " + con.getNombre() + "! <3");
+						imprimir("\n¡Bienvenido a la biblioteca, " + gUsuarios.getConectado().getNombre() + "! <3");
 						imprimir("Pon 'help' para ver la lista de comandos.");
-						if(con.isAdmin()) {
+						if(gUsuarios.getConectado().isAdmin()) {
 							imprimir("\nTienes permisos de administrador, revisa bien");
 							imprimir("lo que escribes antes de ejecutarlo.");
 						}
@@ -873,10 +850,10 @@ public class Shell {
 				// Pedir comando al usuario, ejecutarlo
 				// y guardar el valor devuelto como
 				// último código de error.
-				this.codigoError = this.ejecutar(respuesta("\n" + this.sesion + " ", false));
+				this.codigoError = this.ejecutar(respuesta("\n" + gUsuarios.getPrefijo() + " ", false));
 			}
 		}
 		
-		SCANNER.close();
+		scanner.close();
 	}
 }
