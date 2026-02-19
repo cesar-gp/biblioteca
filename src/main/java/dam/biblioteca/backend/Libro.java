@@ -16,10 +16,6 @@ import dam.biblioteca.enums.Categoria;
  *	@version	0
  */
 public class Libro {
-
-	// Propiedades estáticas
-
-	private static Libro[] lista = new Libro[0];
 	
 	// Propiedades no estáticas
 
@@ -37,25 +33,21 @@ public class Libro {
 		this.isbn = isbn;
 	}
 
-	// Getters
-
-	public static Libro[] getLibros() {
-		return lista;
-	}
-
+	//Devuelve el título del libro
 	public String getNombre() {
 		return this.nombre;
 	}
-
+	//Devuelve quien es el autor del libro
 	public String getAutor() {
 		return this.autor;
 	}
-
+	//Devuelve la categoría a la que pertenece el libro
 	public Categoria getCategoria() {
 		return this.categoria;
 	}
-
+	//Devuelve el ISBN propio del libro
 	public String getIsbn() {
 		return this.isbn;
 	}
+
 }
