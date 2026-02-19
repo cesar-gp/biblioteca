@@ -52,13 +52,13 @@ public class MainTest {
 		seConecta(ROOT_NM, ROOT_PW, true, true);								// Abrir sesión: 'root'.
 
 		funciona("register usuario " + TEMP_NM + " " + TEMP_PW + " n", true);	// Registrar a 'temp'.
-		assertNotNull(USUARIOS.getUsuario(TEMP_NM));							// 'temp' existe.
+		assertTrue(USUARIOS.isRegistrado(TEMP_NM));							// 'temp' existe.
 		funciona("register usuario " + TEMP_NM + " prueba y", false);			// Registrar a 'temp' (no).
 
 		funciona("remove usuario " + TEMP_NM + " " + TEMP_PW, true);			// Eliminar a 'temp'.
 		assertNull(USUARIOS.getUsuario(TEMP_NM));								// 'temp' no existe.
 		funciona("remove usuario " + ROOT_NM, false);							// Eliminar a 'root' (no).
-		assertNotNull(USUARIOS.getUsuario(ROOT_NM));							// 'root' existe.
+		assertTrue(USUARIOS.isRegistrado(ROOT_NM));							// 'root' existe.
 
 		funciona("set contraseña", true);										// Eliminar contraseña.
 		sesionCerrada(true);													// Sesión cerrada.
@@ -75,9 +75,9 @@ public class MainTest {
 	public void testUsuariosNuevos() {
 		seConecta(ROOT_NM, null, true, true);									// Abrir sesión: 'root'.
 		funciona("register usuario " + SUDO_NM + " " + SUDO_PW + " y", true);	// Registrar a 'sudo'.
-		assertNotNull(USUARIOS.getUsuario(SUDO_NM));							// 'sudo' existe.
+		assertTrue(USUARIOS.isRegistrado(SUDO_NM));							// 'sudo' existe.
 		funciona("register usuario " + USER_NM + " " + USER_PW + " y", true);	// Registrar a 'user'.
-		assertNotNull(USUARIOS.getUsuario(USER_NM));							// 'user' existe.
+		assertTrue(USUARIOS.isRegistrado(USER_NM));							// 'user' existe.
 		funciona("logout", true);												// Cerrar sesión.
 		sesionCerrada(true);													// Sesión cerrada.
 
@@ -85,21 +85,21 @@ public class MainTest {
 		funciona("set rol usuario " + ROOT_NM, false);							// Cambiar rol de 'root' (no).
 		assertTrue(USUARIOS.getUsuario(ROOT_NM).isAdmin());						// Cambio no producido.
 		funciona("remove usuario " + ROOT_NM, false);							// Eliminar 'root'.
-		assertNotNull(USUARIOS.getUsuario(ROOT_NM));							// 'root' existe.
+		assertTrue(USUARIOS.isRegistrado(ROOT_NM));							// 'root' existe.
 
 		funciona("set rol usuario " + USER_NM, true);							// Degradar a 'user'.
 		assertFalse(USUARIOS.getUsuario(USER_NM).isAdmin());					// Cambio producido.
 
 		funciona("set nombre prueba", true);									// Cambiar nombre.
 		assertNull(USUARIOS.getUsuario(SUDO_NM));								// 'sudo' no existe.
-		assertNotNull(USUARIOS.getUsuario("prueba"));							// 'prueba' existe.
+		assertTrue(USUARIOS.isRegistrado("prueba"));							// 'prueba' existe.
 		funciona("set contraseña insegura", true);								// Cambiar contraseña.
 		sesionCerrada(true);													// Sesión cerrada.
 
 		seConecta("prueba", "insegura", true, true);							// Abrir sesión: 'prueba'.
 		funciona("set nombre " + SUDO_NM, true);								// Cambiar nombre.
 		assertNull(USUARIOS.getUsuario("prueba"));								// 'prueba' no existe.
-		assertNotNull(USUARIOS.getUsuario(SUDO_NM));							// 'sudo' existe.
+		assertTrue(USUARIOS.isRegistrado(SUDO_NM));							// 'sudo' existe.
 		funciona("set contraseña " + SUDO_PW, true);							// Cambiar contraseña.
 		sesionCerrada(true);													// Sesión cerrada.
 
@@ -117,7 +117,7 @@ public class MainTest {
 		funciona("register usuario prueba contrasena n", false);				// Registrar a 'prueba' (no).
 		assertNull(USUARIOS.getUsuario("prueba"));								// 'prueba' no existe.
 		funciona("remove usuario " + SUDO_NM, false);							// Eliminar a 'sudo' (no).
-		assertNotNull(USUARIOS.getUsuario(SUDO_NM));								// 'sudo' existe.
+		assertTrue(USUARIOS.isRegistrado(SUDO_NM));								// 'sudo' existe.
 		funciona("list usuarios", false);										// Listar usuarios (no).
 
 		funciona("logout", true);												// Cerrar sesión.
