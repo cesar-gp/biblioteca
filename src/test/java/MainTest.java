@@ -2,7 +2,7 @@ import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dam.biblioteca.backend.GestorUsuarios;
-import dam.biblioteca.frontend.Shell;
+import dam.biblioteca.Shell;
 
 public class MainTest {
 

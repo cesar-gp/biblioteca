@@ -1,4 +1,4 @@
-package dam.biblioteca.frontend;
+package dam.biblioteca;
 
 import dam.biblioteca.backend.GestorUsuarios;
 import java.util.Scanner;
@@ -248,6 +248,58 @@ public class Shell {
 	// Funciones: código compartido entre comandos.
 
 	/**
+	 *	<p>
+	 *		Muestra los elementos de una lista, cada uno
+	 *		en una linea, precedidos por su índice o un
+	 *		guión que actúa como viñeta de una lista.
+	 *	</p>
+	 *	<p>
+	 *		Si la lista está compuesta por los elementos
+	 *		{@code a}, {@code b} y {@code c}, se devolverá
+	 *		el siguiente texto:
+	 *	</p>
+	 *	<code>
+	 *		- a
+	 *		- b
+	 *		- c
+	 *	</code>
+	 *	<p>
+	 *		Mediante el segundo argumento, se puede indicar
+	 *		si la lista mostrará guiones o números junto a
+	 *		sus elementos.
+	 *	</p>
+	 *	<p>
+	 *		Los números a partir del 100 se mostrarán
+	 *		desajustados respecto al resto de la lista.
+	 *	</p>
+	 *	<p>
+	 *		Si la lista es nula o está vacía, se devolverá
+	 *		un texto que indique su estado.
+	 *	</p>
+	 *
+	 *	@param	lista	Lista a mostrar.
+	 *	@return	Texto que muestra los elementos de la lista.
+	 */
+	public static String lista(Object[] lista, boolean ordenada) {
+		if(lista == null) return "[Lista nula]";
+		else if(lista.length == 0) return "[Lista vacía]";
+
+		String out = "";
+		for(int i = 0; i < lista.length; i++) {
+			if(i != 0) out += "\n";
+
+			if(ordenada) {
+				if(i < 10) out += " ";
+				out += i + ". ";
+			} else out += "  - ";
+
+			out += lista[i];
+		}
+
+		return out;
+	}
+
+	/**
 	 *	Comprueba si el usuario tiene permisos
 	 *	de administrador y, en caso negativo,
 	 *	lo indica mediante un mensaje de error.
@@ -300,7 +352,7 @@ public class Shell {
 		switch(tipo) {
 			case "u": case "usuario": case "usuarios":
 				// Mostrar lista de usuarios.
-				imprimir(Listas.lista(gUsuarios.getUsuarios(), true));
+				imprimir(lista(gUsuarios.getUsuarios(), true));
 				return ERR_COMANDO;
 			case "l": case "libro": case "libros":
 				// Mostrar lista de libros.

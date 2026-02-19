@@ -1,6 +1,6 @@
 package dam.biblioteca;
 
-import dam.biblioteca.frontend.Shell;
+import dam.biblioteca.Shell;
 
 /**
  *	Clase principal del proyecto "Biblioteca".
