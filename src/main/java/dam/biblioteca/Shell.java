@@ -448,29 +448,34 @@ public class Shell {
 				
 				
 			case "l": case "libro":
-				// Registrar libro. No soportado.
+				// Coger titulo del segundo argumento o preguntar. 
 				String titulo;
-				if (argv.length < 3 ) titulo = respuesta("Título del libro: ", true);
+				if (argv.length < 3) titulo = respuesta("Título del libro: ", true);
 				else titulo = argv[2];
 				
+				// Coger autor del tercer argumento o preguntar.
 				String autor;
-				if (argv.length < 4 ) autor = respuesta("Autor de la obra: ", true);
+				if (argv.length < 4) autor = respuesta("Autor de la obra: ", true);
 				else autor = argv[3];
 				
+				// Coger categoria del quinto argumento o preguntar.
+				// TODO: Importante. Corregir. No pasa los tests.
 				Categoria categoria;
-				if (argv.length < 5 ) {
+				if (argv.length < 5) {
 					String resp = respuesta("Categoría de la obra: ", false);
 					categoria = Categoria.valueOf(resp);
 				}
 				else categoria = Categoria.valueOf(argv[4]);
 				
+				// Coger ISBN del sexto argumento o preguntar.
 				String isbn;
-				if (argv.length < 6 ) isbn = respuesta ("ISBN de la obra: ", true);
+				if (argv.length < 6) isbn = respuesta ("ISBN de la obra: ", true);
 				else isbn = argv[5];
 				
+				// Realizar operación.
 				int errLib = gLibros.registrar(titulo, autor, categoria, isbn);
 				switch (errLib) {
-				case 0: 
+				case 0:
 					imprimir("Se ha registrado en la biblioteca el libro: " + titulo);
 					break;
 				case 1:
@@ -481,9 +486,10 @@ public class Shell {
 					break;
 				}
 				
+				// TODO: el comando debe retornar `errLib`,
+				// no ERR_DESCONOCIDO cuando se ha ejecutado
+				// correctamente.
 				return ERR_DESCONOCIDO;
-				
-				
 			case "p": case "prestamo": case "préstamo":
 				// Registrar préstamo. No soportado.
 				return ERR_DESCONOCIDO;
