@@ -6,8 +6,11 @@ import dam.biblioteca.Shell;
 
 public class MainTest {
 
-	// TODO: añadir tests para respuestaBinaria
-	// TODO: añadir tests para caracteres de escape y comillas en los comandos.
+	// TODO:	añadir tests para respuestaBinaria.
+
+	// TODO:	añadir tests para caracteres de escape
+	//			y comillas en los comandos cuando recuperemos
+	//			el test de `register libro`.
 
 	// Constantes
 
@@ -132,13 +135,17 @@ public class MainTest {
 		seConecta(ROOT_NM, null, true, true);									// Abrir sesión: 'root'.
 
 		funciona("help", true);													// Probar comandos.
-		funciona("HELP", true);
-		funciona("error", true);
-		funciona("exit", true);
+		funciona("\"help\"", true);
+		funciona("Error", true);
+		funciona("\"Error", false);
+		funciona("EXIT", true);
+		funciona("EXIT\"", false);
 
 		funciona("register", false);											// 'register' erróneos.
 		funciona("register usuario", false);
-		funciona("register usuario nombre+invalido", false);
+		funciona("register usuario \"nombre invalido\"", false);
+		funciona("register usuario \"nombre\\ invalido\"", false);
+		funciona("register usuario nombre\\ invalido", false);
 		// TODO: recuperar test. (ver Shell:462)
 		// funciona("register libro", false);
 		funciona("register prestamo", false);
@@ -149,6 +156,7 @@ public class MainTest {
 		funciona("remove prestamo", false);
 
 		funciona("list usuarios", true);										// Pruebas de 'list'.
+		funciona("list usuarios", true);
 		funciona("list libros", true);
 		funciona("list prestamos", true);
 		funciona("list", false);

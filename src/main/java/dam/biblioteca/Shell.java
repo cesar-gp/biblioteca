@@ -626,7 +626,7 @@ public class Shell {
 						imprimir("Error: el nombre ya está cogido.");
 						break;
 					case 3:
-						imprimir("Error: el nombre no puede estar vacío.");
+						imprimir("Error: el nombre solo puede contener letras, números, guiones y barrabajas.");
 						break;
 					default:
 						imprimir("Error: fallo desconocido al cambiar el nombre.");
@@ -838,23 +838,40 @@ public class Shell {
 	// Funciones: funcionalidad básica de la shell.
 
 	public String[] separarArgumentos(String in) {
+		// ¿Comando nulo? Error.
+		if(in == null) return null;
+
+		// Pasar a minúsculas.
+		in = in.toLowerCase();
+
 		String[] argumentos = new String[MAX_ARGS];
 		int len = 0;
 
 		// Volcar argumentos en el array.
 		String arg = "";
 		boolean escape = false;
+		boolean grupo = false;
 		for(int i = 0; i < in.length(); i++) {
 			char c = in.charAt(i);
 
-			// Caracter de escape
-			if(c == '\\') {
+			// Caracter de escape: ignora si el
+			// siguiente caracter es especial.
+			if(c == '\\' && !escape) {
 				escape = true;
 				continue;
 			}
 
-			// Caracter delimitador
-			if(c == ' ' && !escape) {
+			// Caracter de agrupación: ignora los
+			// caracteres especiales hasta encontrar
+			// otro caracter que cierre el grupo.
+			if(c == '"' && !escape) {
+				grupo = !grupo;
+				continue;
+			}
+
+			// Caracter delimitador: indica el
+			// paso de un argumento al siguiente.
+			if(c == ' ' && !escape && !grupo) {
 				argumentos[len++] = arg;
 				if(len == MAX_ARGS) return null;
 
@@ -862,9 +879,14 @@ public class Shell {
 				continue;
 			}
 
+			// Agregar caracter al argumento actual
+			// y desactivar escape si está activo.
 			arg += c;
 			escape = false;
 		}
+
+		// ¿Grupo sin cerrar? Error.
+		if(grupo) return null;
 
 		// Meter en `argumentos` el texto que falte.
 		if(!arg.isEmpty()) {
@@ -896,13 +918,16 @@ public class Shell {
 	 *	@return	Código de error
 	 */
 	public int ejecutar(String cmd) {
-		// ¿Comando nulo recibido? Error.
-		if(cmd == null) return ERR_ARGUMENTO;
-
 		// Pasar el comando a minúsculas y separarlo en argumentos.
-		//String[] argv = cmd.toLowerCase().split(" ");
-		String[] argv = separarArgumentos(cmd.toLowerCase());
+		String[] argv = separarArgumentos(cmd);
 
+		// ¿Comando y argumentos nulos o vacíos? Error.
+		if(argv == null || argv.length == 0) {
+			imprimir("Error: comando nulo, vacío o con comillas sin cerrar.");
+			return ERR_ARGUMENTO;
+		}
+
+		// ¿Ningún usuario conectado? Error.
 		if(gUsuarios.getConectado() == null) {
 			imprimir("Error: sesión inválida.");
 			return ERR_AUTENTICACION;
