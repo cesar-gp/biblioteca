@@ -902,7 +902,8 @@ public class Shell {
 				// Pedir comando al usuario, ejecutarlo
 				// y guardar el valor devuelto como
 				// último código de error.
-				this.codigoError = this.ejecutar(respuesta("\n" + gUsuarios.getPrefijo() + " ", false));
+				String cmd = respuesta("\n" + gUsuarios.getPrefijo() + " ", false).toLowerCase();
+				this.codigoError = this.ejecutar(cmd);
 			}
 		}
 		
