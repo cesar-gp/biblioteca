@@ -1,5 +1,7 @@
 package dam.biblioteca;
 
+import java.util.Scanner;
+
 /**
  *	<p>
  *		Clase principal del proyecto "Biblioteca".
@@ -9,10 +11,8 @@ package dam.biblioteca;
  *	@author César Gutiérrez Pérez
  */
 public class Main {
-
-	// Método principal
-
-	public static void main(String[] args) {
-		System.out.println("Hola");
+	public static void main(String[]args) {
+		
 	}
+	
 }
