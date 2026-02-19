@@ -41,6 +41,9 @@ public class Shell {
 	// Errores desconocidos o no clasificados (400 - ...).
 	public static final int ERR_DESCONOCIDO = 400;
 
+	// Máximo número de argumentos en un comando.
+	public static final int MAX_ARGS = 32;
+
 	// Propiedades no estáticas
 
 	private final Scanner scanner;
@@ -683,7 +686,7 @@ public class Shell {
 		else if(this.codigoError >= ERR_AUTENTICACION)
 			mensaje = "sesión inválida o permiso denegado";
 		else if(this.codigoError >= ERR_ARGUMENTO)
-			mensaje = "se ha introducido un comando o argumento inválido";
+			mensaje = "se ha introducido un comando o argumentos inválidos";
 		else if(this.codigoError > ERR_COMANDO)
 			mensaje = "error nº " + (this.codigoError - ERR_COMANDO) + " al ejecutar el comando.";
 		else if(this.codigoError == ERR_COMANDO)
@@ -788,6 +791,55 @@ public class Shell {
 
 	// Funciones: funcionalidad básica de la shell.
 
+	public String[] separarArgumentos(String in) {
+		String[] argumentos = new String[MAX_ARGS];
+		int len = 0;
+
+		// Volcar argumentos en el array.
+		String arg = "";
+		boolean escape = false;
+		for(int i = 0; i < in.length(); i++) {
+			char c = in.charAt(i);
+
+			// Caracter de escape
+			if(c == '\\') {
+				escape = true;
+				continue;
+			}
+
+			// Caracter delimitador
+			if(c == ' ' && !escape) {
+				argumentos[len++] = arg;
+				if(len == MAX_ARGS) return null;
+
+				arg = "";
+				continue;
+			}
+
+			arg += c;
+			escape = false;
+		}
+
+		// Meter en `argumentos` el texto que falte.
+		if(!arg.isEmpty()) {
+			argumentos[len++] = arg;
+			if(len == MAX_ARGS) return null;
+		}
+
+		// Si el array tiene los argumentos
+		// máximos, devolverla directamente.
+		if(len == MAX_ARGS) return argumentos;
+
+		// Crear array recortada y llenarla
+		// con los argumentos recogidos.
+		String[] out = new String[len];
+		for(int i = 0; i < out.length; i++)
+			out[i] = argumentos[i];
+
+		// Devolver array recortada.
+		return out;
+	}
+
 	/**
 	 *	Recibe un comando, lo separa por argumentos y
 	 *	ejecuta su función.
@@ -798,8 +850,12 @@ public class Shell {
 	 *	@return	Código de error
 	 */
 	public int ejecutar(String cmd) {
-		// Separar el comando en argumentos.
-		String[] argv = cmd.split(" ");
+		// ¿Comando nulo recibido? Error.
+		if(cmd == null) return ERR_ARGUMENTO;
+
+		// Pasar el comando a minúsculas y separarlo en argumentos.
+		//String[] argv = cmd.toLowerCase().split(" ");
+		String[] argv = separarArgumentos(cmd.toLowerCase());
 
 		if(gUsuarios.getConectado() == null) {
 			imprimir("Error: sesión inválida.");
@@ -828,7 +884,7 @@ public class Shell {
 			default:
 				imprimir("Error: no se reconoce '" + argv[0] + "' como comando.");
 				imprimir("Pon 'help' para ver la lista de comandos.");
-				return ERR_ARGUMENTO;
+				return ERR_ARGUMENTO + 1;
 		}
 	}
 	
@@ -902,7 +958,7 @@ public class Shell {
 				// Pedir comando al usuario, ejecutarlo
 				// y guardar el valor devuelto como
 				// último código de error.
-				String cmd = respuesta("\n" + gUsuarios.getPrefijo() + " ", false).toLowerCase();
+				String cmd = respuesta("\n" + gUsuarios.getPrefijo() + " ", false);
 				this.codigoError = this.ejecutar(cmd);
 			}
 		}

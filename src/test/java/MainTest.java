@@ -7,6 +7,7 @@ import dam.biblioteca.Shell;
 public class MainTest {
 
 	// TODO: añadir tests para respuestaBinaria
+	// TODO: añadir tests para caracteres de escape y comillas en los comandos.
 
 	// Constantes
 
@@ -131,6 +132,7 @@ public class MainTest {
 		seConecta(ROOT_NM, null, true, true);									// Abrir sesión: 'root'.
 
 		funciona("help", true);													// Probar comandos.
+		funciona("HELP", true);
 		funciona("error", true);
 		funciona("exit", true);
 
