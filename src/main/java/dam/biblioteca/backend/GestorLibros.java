@@ -1,9 +1,9 @@
-package dam.biblioteca;
+package dam.biblioteca.backend;
 
-import dam.biblioteca.backend.Libro;
 import dam.biblioteca.enums.Criterio;
 
-public class GestionLibro {
+public class GestorLibros {
+	
 	// Propiedades estáticas
 
 	Libro[] lista = new Libro[3];
