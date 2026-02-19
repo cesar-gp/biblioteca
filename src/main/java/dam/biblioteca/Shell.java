@@ -1,6 +1,8 @@
 package dam.biblioteca;
 
 import dam.biblioteca.backend.GestorUsuarios;
+import dam.biblioteca.enums.Categoria;
+import dam.biblioteca.backend.GestorLibros;
 import java.util.Scanner;
 
 /**
@@ -45,6 +47,7 @@ public class Shell {
 
 	private final Scanner scanner;
 	private final GestorUsuarios gUsuarios;
+	private final GestorLibros gLibros;
 
 	private boolean abierta;
 	private int codigoError;
@@ -52,8 +55,9 @@ public class Shell {
 	// Constructores
 
 	public Shell() {
-		scanner = new Scanner(System.in);
-		gUsuarios = new GestorUsuarios();
+		this.scanner = new Scanner(System.in);
+		this.gUsuarios = new GestorUsuarios();
+		this.gLibros = new GestorLibros();
 
 		this.abierta = false;
 		this.codigoError = ERR_INICIO;
@@ -356,7 +360,7 @@ public class Shell {
 				return ERR_COMANDO;
 			case "l": case "libro": case "libros":
 				// Mostrar lista de libros.
-				// TODO: no soportado.
+				imprimir(lista(gLibros.getLibros(), true));
 				return ERR_COMANDO;
 			case "p": case "prestamo": case "préstamo":
 			case "prestamos": case "préstamos":
@@ -438,9 +442,45 @@ public class Shell {
 				}
 
 				return ERR_COMANDO + err;
+				
+				
 			case "l": case "libro":
 				// Registrar libro. No soportado.
+				String titulo;
+				if (argv.length < 3 ) titulo = respuesta("Título del libro: ", true);
+				else titulo = argv[2];
+				
+				String autor;
+				if (argv.length < 4 ) autor = respuesta("Autor de la obra: ", true);
+				else autor = argv[3];
+				
+				Categoria categoria;
+				if (argv.length < 5 ) {
+					String resp = respuesta("Categoría de la obra: ", false);
+					categoria = Categoria.valueOf(resp);
+				}
+				else categoria = Categoria.valueOf(argv[4]);
+				
+				String isbn;
+				if (argv.length < 6 ) isbn = respuesta ("ISBN de la obra: ", true);
+				else isbn = argv[5];
+				
+				int errLib = gLibros.registrar(titulo, autor, categoria, isbn);
+				switch (errLib) {
+				case 0: 
+					imprimir("Se ha registrado en la biblioteca el libro: " + titulo);
+					break;
+				case 1:
+					imprimir("Error: Se ha alcanzado el número máximo de libros.");
+					break;
+				case 2:
+					imprimir("Error: Libro " + titulo + " ya está registrado.");
+					break;
+				}
+				
 				return ERR_DESCONOCIDO;
+				
+				
 			case "p": case "prestamo": case "préstamo":
 				// Registrar préstamo. No soportado.
 				return ERR_DESCONOCIDO;

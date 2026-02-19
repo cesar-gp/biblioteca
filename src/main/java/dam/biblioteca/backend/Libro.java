@@ -19,7 +19,7 @@ public class Libro {
 	
 	// Propiedades no estáticas
 
-	private String nombre;
+	private String titulo;
 	private String autor;
 	private Categoria categoria;
 	private String isbn;
@@ -27,15 +27,15 @@ public class Libro {
 	// Constructor
 
 	public Libro(String nombre, String autor, Categoria categoria, String isbn) {
-		this.nombre = nombre;
+		this.titulo = nombre;
 		this.autor = autor;
 		this.categoria = categoria;
 		this.isbn = isbn;
 	}
 
 	//Devuelve el título del libro
-	public String getNombre() {
-		return this.nombre;
+	public String getTitulo() {
+		return this.titulo;
 	}
 	//Devuelve quien es el autor del libro
 	public String getAutor() {
@@ -50,4 +50,9 @@ public class Libro {
 		return this.isbn;
 	}
 
+	@Override
+	public String toString() {
+		return this.titulo;
+	}
+	
 }
