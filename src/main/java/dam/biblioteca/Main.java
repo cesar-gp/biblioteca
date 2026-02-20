@@ -1,7 +1,5 @@
 package dam.biblioteca;
 
-import dam.biblioteca.Shell;
-
 /**
  *	Clase principal del proyecto "Biblioteca".
  * 
@@ -13,5 +11,4 @@ public class Main {
 	public static void main(String[] args) {
 		new Shell().abrir();
 	}
-	
 }
