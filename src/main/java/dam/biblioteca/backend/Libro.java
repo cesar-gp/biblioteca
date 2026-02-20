@@ -52,7 +52,8 @@ public class Libro {
 
 	@Override
 	public String toString() {
-		return this.titulo;
+		return "Libro: " + this.titulo + ". Del autor: " + this.autor + ". Categoría: " + this.categoria
+				+ ". Con el ISBN: " + this.isbn;
 	}
 	
 }

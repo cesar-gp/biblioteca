@@ -146,8 +146,7 @@ public class MainTest {
 		funciona("register usuario \"nombre invalido\"", false);
 		funciona("register usuario \"nombre\\ invalido\"", false);
 		funciona("register usuario nombre\\ invalido", false);
-		// TODO: recuperar test. (ver Shell:462)
-		// funciona("register libro", false);
+		funciona("register libro", false);
 		funciona("register prestamo", false);
 
 		funciona("remove", false);												// 'remove' erróneos.

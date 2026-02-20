@@ -450,26 +450,57 @@ public class Shell {
 			case "l": case "libro":
 				// Coger titulo del segundo argumento o preguntar. 
 				String titulo;
-				if (argv.length < 3) titulo = respuesta("Título del libro: ", true);
+				if (argv.length < 3) titulo = respuesta("Título del libro: ", false);
 				else titulo = argv[2];
 				
 				// Coger autor del tercer argumento o preguntar.
 				String autor;
-				if (argv.length < 4) autor = respuesta("Autor de la obra: ", true);
+				if (argv.length < 4) autor = respuesta("Autor de la obra: ", false);
 				else autor = argv[3];
 				
 				// Coger categoria del quinto argumento o preguntar.
+				String strCategoria;
+				if(argv.length < 5) strCategoria = respuesta("Categoría de la obra: ", false);
+				else strCategoria = argv[4];
+				
 				// TODO: Importante. Corregir. No pasa los tests.
 				Categoria categoria;
-				if (argv.length < 5) {
-					String resp = respuesta("Categoría de la obra: ", false);
-					categoria = Categoria.valueOf(resp);
+				switch (strCategoria) {
+					case "general": case "ge": 
+						categoria = Categoria.GENERAL;
+						break;
+					case "filosofia_y_psicologia": case "fp": case "filosofia": case "psicologia":
+						categoria = Categoria.FILOSOFIA_Y_PSICOLOGIA;
+						break;
+					case "religion_y_teologia": case "rt": case "religion": case "teologia":
+						categoria = Categoria.RELIGION_Y_TEOLOGIA;
+						break;
+					case "ciencias_sociales": case "cs":
+						categoria = Categoria.CIENCIAS_SOCIALES;
+						break;
+					case "lenguas": case "l":
+						categoria = Categoria.LENGUAS;
+						break;
+					case "ciencias_basicas": case "cb":
+						categoria = Categoria.CIENCIAS_BASICAS;
+						break;
+					case "tecnologia_y_ciencias_aplicadas": case "tc": case "tecnologia": case "ciencias_aplicadas":
+						categoria = Categoria.TECNOLOGIA_Y_CIENCIAS_APLICADAS;
+						break;
+					case "artes_y_recreacion": case "ar": case "artes": case "recreacion":
+						categoria = Categoria.ARTES_Y_RECREACION;
+						break;
+					case "historia_y_geografia": case "hg": case "historia": case "geografia":
+						categoria = Categoria.HISTORIA_Y_GEOGRAFIA;
+						break;
+					default:
+						imprimir("Error: Categoría inválida.");
+						return ERR_ARGUMENTO + 5;
 				}
-				else categoria = Categoria.valueOf(argv[4]);
 				
 				// Coger ISBN del sexto argumento o preguntar.
 				String isbn;
-				if (argv.length < 6) isbn = respuesta ("ISBN de la obra: ", true);
+				if (argv.length < 6) isbn = respuesta ("ISBN de la obra: ", false);
 				else isbn = argv[5];
 				
 				// Realizar operación.
@@ -489,7 +520,7 @@ public class Shell {
 				// TODO: el comando debe retornar `errLib`,
 				// no ERR_DESCONOCIDO cuando se ha ejecutado
 				// correctamente.
-				return ERR_DESCONOCIDO;
+				return ERR_COMANDO + errLib;
 			case "p": case "prestamo": case "préstamo":
 				// Registrar préstamo. No soportado.
 				return ERR_DESCONOCIDO;
