@@ -273,11 +273,9 @@ public class Shell {
 	 *	<p>
 	 *		Mediante el segundo argumento, se puede indicar
 	 *		si la lista mostrará guiones o números junto a
-	 *		sus elementos.
-	 *	</p>
-	 *	<p>
-	 *		Los números a partir del 100 se mostrarán
-	 *		desajustados respecto al resto de la lista.
+	 *		sus elementos. Los números a partir del 100 se
+	 *		mostrarán desajustados respecto al resto de la
+	 *		lista.
 	 *	</p>
 	 *	<p>
 	 *		Si la lista es nula o está vacía, se devolverá
@@ -872,9 +870,6 @@ public class Shell {
 		// ¿Comando nulo? Error.
 		if(in == null) return null;
 
-		// Pasar a minúsculas.
-		in = in.toLowerCase();
-
 		String[] argumentos = new String[MAX_ARGS];
 		int len = 0;
 
@@ -965,7 +960,7 @@ public class Shell {
 		}
 
 		// Ver qué comando quiere ejecutar el usuario.
-		switch(argv[0]) {
+		switch(argv[0].toLowerCase()) {
 			case "l": case "ls": case "list":
 				return this.list(argv);
 			case "r": case "reg": case "register":
@@ -980,6 +975,9 @@ public class Shell {
 				return this.error();
 			case "o": case "out": case "logout":
 				return this.logout();
+			case "args":
+				imprimir(lista(argv, true));
+				return ERR_COMANDO;
 			case "x": case "ex": case "exit":
 				this.abierta = false;
 				return ERR_COMANDO;
