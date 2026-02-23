@@ -1,7 +1,8 @@
 package dam.biblioteca;
 
-import dam.biblioteca.backend.GestorUsuarios;
 import dam.biblioteca.enums.Categoria;
+import dam.biblioteca.enums.Criterio;
+import dam.biblioteca.backend.GestorUsuarios;
 import dam.biblioteca.backend.GestorLibros;
 import java.util.Scanner;
 
@@ -443,8 +444,6 @@ public class Shell {
 				}
 
 				return ERR_COMANDO + err;
-				
-				
 			case "l": case "libro":
 				// Coger titulo del segundo argumento o preguntar. 
 				String titulo;
@@ -505,19 +504,16 @@ public class Shell {
 				int errLib = gLibros.registrar(titulo, autor, categoria, isbn);
 				switch (errLib) {
 				case 0:
-					imprimir("Se ha registrado en la biblioteca el libro: " + titulo);
+					imprimir("Se ha registrado en la biblioteca el libro '" + titulo + "'.");
 					break;
 				case 1:
 					imprimir("Error: Se ha alcanzado el número máximo de libros.");
 					break;
 				case 2:
-					imprimir("Error: Libro " + titulo + " ya está registrado.");
+					imprimir("Error: ya existe un libro con el ISBN '" + isbn + "'.");
 					break;
 				}
 				
-				// TODO: el comando debe retornar `errLib`,
-				// no ERR_DESCONOCIDO cuando se ha ejecutado
-				// correctamente.
 				return ERR_COMANDO + errLib;
 			case "p": case "prestamo": case "préstamo":
 				// Registrar préstamo. No soportado.
@@ -804,6 +800,53 @@ public class Shell {
 
 	/**
 	 *	<p>
+	 *		Función del comando {@code search}.
+	 *	</p>
+	 *	<p>
+	 *		Busca libros de la biblioteca según su
+	 *		autor, título y categoría.
+	 *	</p>
+	 */
+	private int search(String[] argv) {
+		// Conseguir criterio del primer argumento,
+		// o preguntarlo si es preciso.
+		String strCriterio;
+		if(argv.length < 2) strCriterio = respuesta("Criterio [titulo/autor/categoria]: ", false);
+		else strCriterio = argv[1];
+
+		Criterio criterio;
+		switch(strCriterio.toLowerCase()) {
+			case "t": case "titulo":
+				criterio = Criterio.TITULO;
+				break;
+			case "a": case "autor":
+				criterio = Criterio.AUTOR;
+				break;
+			case "c": case "categoria":
+				criterio = Criterio.CATEGORIA;
+				break;
+			default:
+				imprimir("Error: criterio no reconocido.");
+				imprimir("Valores válidos: titulo, autor, categoria");
+				return ERR_ARGUMENTO + 3;
+		}
+
+		// Conseguir dato del segundo argumento,
+		// o preguntarlo si es preciso.
+		String dato;
+		if(argv.length < 3) dato = respuesta("Valor: ", false);
+		else dato = argv[2];
+
+		// Intentar sacar la lista de libros y
+		// mostrar información al respecto.
+		imprimir(lista(gLibros.buscar(criterio, dato), true));
+
+		// Operación realizada.
+		return ERR_COMANDO;
+	}
+
+	/**
+	 *	<p>
 	 *		Función del comando {@code help}.
 	 *	</p>
 	 *	<p>
@@ -845,6 +888,9 @@ public class Shell {
 
 		// Añadir descripciones para todos los usuarios.
 		out +=
+			" - search\n" +
+			"   Busca libros dentro de la biblioteca.\n" +
+			"\n" +
 			" - error\n" +
 			"   Muestra el último código de error.\n" +
 			"\n" +
@@ -967,17 +1013,16 @@ public class Shell {
 				return this.register(argv);
 			case "d": case "del": case "rem": case "delete": case "remove":
 				return this.remove(argv);
-			case "h": case "?": case "help":
-				return this.help();
 			case "s": case "set":
 				return this.set(argv);
+			case "!": case "search":
+				return this.search(argv);
+			case "?": case "h": case "help":
+				return this.help();
 			case "e": case "err": case "error":
 				return this.error();
 			case "o": case "out": case "logout":
 				return this.logout();
-			case "args":
-				imprimir(lista(argv, true));
-				return ERR_COMANDO;
 			case "x": case "ex": case "exit":
 				this.abierta = false;
 				return ERR_COMANDO;

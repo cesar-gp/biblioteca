@@ -64,13 +64,13 @@ public class GestorLibros {
 			// Comprobar si el criterio de filtrado se cumple.
 			switch(criterio) {
 				case AUTOR:
-					encuentro = lista[i].getAutor().contains(dato);
+					encuentro = lista[i].getAutor().toLowerCase().contains(dato.toLowerCase());
 					break;
 				case TITULO:
-					encuentro = lista[i].getTitulo().contains(dato);
+					encuentro = lista[i].getTitulo().toLowerCase().contains(dato.toLowerCase());
 					break;
 				case CATEGORIA:
-					encuentro = lista[i].getCategoria().name().contains(dato);
+					encuentro = lista[i].getCategoria().name().toLowerCase().contains(dato.toLowerCase());
 					break;
 				default:
 					// ¿Criterio desconocido? Consulta inválida.
