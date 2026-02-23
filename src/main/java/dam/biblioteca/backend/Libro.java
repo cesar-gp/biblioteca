@@ -97,7 +97,7 @@ public class Libro {
 	 */
 	@Override
 	public String toString() {
-		return this.autor + " - " + this.titulo
+		return this.titulo + ", de " + this.autor
 			+ " (" + this.categoria + ") ["
 			+ this.isbn + "]";
 	}

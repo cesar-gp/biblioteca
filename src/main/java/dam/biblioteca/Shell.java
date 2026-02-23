@@ -549,7 +549,10 @@ public class Shell {
 			else noAdmin = stringABoolean(argv[1], false, true);
 			
 			// Detener la ejecución si no quiere continuar.
-			if(!noAdmin) return ERR_USUARIO;
+			if(!noAdmin) {
+				imprimir("Operación cancelada por el usuario.");
+				return ERR_USUARIO;
+			}
 		}
 
 		// Especificar tipo a borrar:
@@ -829,7 +832,7 @@ public class Shell {
 		// Conseguir criterio del primer argumento,
 		// o preguntarlo si es preciso.
 		String strCriterio;
-		if(argv.length < 2) strCriterio = respuesta("Criterio [titulo/autor/categoria]: ", false);
+		if(argv.length < 2) strCriterio = respuesta("Criterio [titulo/autor/categoria/isbn/todos]: ", false);
 		else strCriterio = argv[1];
 
 		Criterio criterio;
@@ -843,6 +846,12 @@ public class Shell {
 			case "c": case "categoria":
 				criterio = Criterio.CATEGORIA;
 				break;
+			case "i": case "isbn":
+				criterio = null;
+				break;
+			case "*": case "todos":
+				imprimir(lista(gLibros.getLibros(), false));
+				return ERR_COMANDO;
 			default:
 				imprimir("Error: criterio no reconocido.");
 				imprimir("Valores válidos: titulo, autor, categoria");
@@ -857,7 +866,8 @@ public class Shell {
 
 		// Intentar sacar la lista de libros y
 		// mostrar información al respecto.
-		imprimir(lista(gLibros.buscar(criterio, dato), true));
+		if(criterio == null) imprimir(gLibros.getLibro(dato) + "");
+		else imprimir(lista(gLibros.buscar(criterio, dato), false));
 
 		// Operación realizada.
 		return ERR_COMANDO;
