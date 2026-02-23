@@ -12,6 +12,9 @@ public class MainTest {
 	//			y comillas en los comandos cuando recuperemos
 	//			el test de `register libro`.
 
+	// TODO:	añadir tests para registro de libros
+	//			y de préstamos.
+
 	// Constantes
 
 	public static final Shell SHELL = new Shell();

@@ -4,6 +4,7 @@ import dam.biblioteca.enums.Categoria;
 import dam.biblioteca.enums.Criterio;
 import dam.biblioteca.backend.GestorUsuarios;
 import dam.biblioteca.backend.GestorLibros;
+import dam.biblioteca.backend.GestorPrestamos;
 import java.util.Scanner;
 
 /**
@@ -52,6 +53,7 @@ public class Shell {
 	private final Scanner scanner;
 	private final GestorUsuarios gUsuarios;
 	private final GestorLibros gLibros;
+	private final GestorPrestamos gPrestamos;
 
 	private boolean abierta;
 	private int codigoError;
@@ -62,6 +64,7 @@ public class Shell {
 		this.scanner = new Scanner(System.in);
 		this.gUsuarios = new GestorUsuarios();
 		this.gLibros = new GestorLibros();
+		this.gPrestamos = new GestorPrestamos(gUsuarios, gLibros);
 
 		this.abierta = false;
 		this.codigoError = ERR_INICIO;
@@ -367,7 +370,10 @@ public class Shell {
 			case "p": case "prestamo": case "préstamo":
 			case "prestamos": case "préstamos":
 				// Mostrar lista de préstamos.
-				// TODO: no soportado.
+				imprimir("PRÉSTAMOS ACTIVOS:");
+				imprimir(lista(gPrestamos.getPrestamos(true), true));
+				imprimir("\nPRÉSTAMOS INACTIVOS:");
+				imprimir(lista(gPrestamos.getPrestamos(false), false));
 				return ERR_COMANDO;
 			default:
 				// ¿Otro tipo? Error.
@@ -447,12 +453,12 @@ public class Shell {
 			case "l": case "libro":
 				// Coger titulo del segundo argumento o preguntar. 
 				String titulo;
-				if (argv.length < 3) titulo = respuesta("Título del libro: ", false);
+				if(argv.length < 3) titulo = respuesta("Título del libro: ", false);
 				else titulo = argv[2];
 				
 				// Coger autor del tercer argumento o preguntar.
 				String autor;
-				if (argv.length < 4) autor = respuesta("Autor de la obra: ", false);
+				if(argv.length < 4) autor = respuesta("Autor de la obra: ", false);
 				else autor = argv[3];
 				
 				// Coger categoria del quinto argumento o preguntar.
@@ -460,7 +466,6 @@ public class Shell {
 				if(argv.length < 5) strCategoria = respuesta("Categoría de la obra: ", false);
 				else strCategoria = argv[4];
 				
-				// TODO: Importante. Corregir. No pasa los tests.
 				Categoria categoria;
 				switch (strCategoria) {
 					case "general": case "ge": 
@@ -497,7 +502,7 @@ public class Shell {
 				
 				// Coger ISBN del sexto argumento o preguntar.
 				String isbn;
-				if (argv.length < 6) isbn = respuesta ("ISBN de la obra: ", false);
+				if(argv.length < 6) isbn = respuesta("ISBN de la obra: ", false);
 				else isbn = argv[5];
 				
 				// Realizar operación.
@@ -516,8 +521,34 @@ public class Shell {
 				
 				return ERR_COMANDO + errLib;
 			case "p": case "prestamo": case "préstamo":
-				// Registrar préstamo. No soportado.
-				return ERR_DESCONOCIDO;
+				// Coger usuario del tercer argumento o preguntar.
+				String strUsuario;
+				if(argv.length < 3) strUsuario = respuesta("Usuario que recibe el préstamo: ", false);
+				else strUsuario = argv[2];
+
+				// Coger libro del cuarto argumento o preguntar.
+				String strLibro;
+				if(argv.length < 4) strLibro = respuesta("ISBN del libro a prestar: ", false);
+				else strLibro = argv[3];
+
+				// Intentar registrar el préstamo e informar del resultado.
+				int errPrestamo = gPrestamos.registrar(gUsuarios.getUsuario(strUsuario), gLibros.getLibro(strLibro));
+				switch(errPrestamo) {
+					case 0:
+						imprimir("Se ha registrado un préstamo del libro con el ISBN '" + strLibro + "' al usuario '" + strUsuario + "'.");
+						break;
+					case 1:
+						imprimir("Error: no hay espacio para más préstamos.");
+						break;
+					case 2:
+						imprimir("Error: usuario o libro no registrados.");
+						break;
+					case 3:
+						imprimir("Error: ese préstamo ya está registrado.");
+						break;
+				}
+
+				return ERR_ARGUMENTO + errPrestamo;
 			default:
 				// ¿Otro tipo? Error.
 				tipoIncorrecto();
@@ -615,8 +646,31 @@ public class Shell {
 
 				return ERR_COMANDO + errLib;
 			case "p": case "prestamo": case "préstamo":
-				// No soportado.
-				return ERR_DESCONOCIDO;
+				// Sacar usuario del tercer argumento o preguntar.
+				String strUsuario;
+				if(argv.length < 3) strUsuario = respuesta("Usuario: ", false);
+				else strUsuario = argv[2];
+
+				// Sacar libro del cuarto argumento o preguntar.
+				String strLibro;
+				if(argv.length < 4) strLibro = respuesta("Libro: ", false);
+				else strLibro = argv[3];
+
+				// Intentar borrar el préstamo e informar del resultado.
+				int errPrestamo = gPrestamos.eliminar(gPrestamos.getPrestamoActivo(gUsuarios.getUsuario(strUsuario), gLibros.getLibro(strLibro)));
+				switch(errPrestamo) {
+					case 0:
+						imprimir("Se ha borrado el préstamo de la lista de préstamos activos.");
+						break;
+					case 1:
+						imprimir("Error: préstamo nulo o no registrado.");
+						break;
+					case 2:
+						imprimir("Error: préstamo no registrado, ¿está bien asociado el gestor de usuarios?");
+						break;
+				}
+
+				return ERR_ARGUMENTO + errPrestamo;
 			default:
 				// ¿Otro tipo? Error.
 				tipoIncorrecto();

@@ -21,14 +21,12 @@ public class Prestamo {
 
 	private Usuario usuario;
 	private Libro libro;
-	private boolean activo;
 
 	// Constructor
 
 	public Prestamo(Usuario usuario, Libro libro) {
 		this.usuario = usuario;
 		this.libro = libro;
-		this.activo = true;
 	}
 
 	// Getters
@@ -41,7 +39,10 @@ public class Prestamo {
 		return this.libro;
 	}
 
-	public boolean isActivo() {
-		return this.activo;
+	// Funciones
+
+	@Override
+	public String toString() {
+		return "Préstamo de '" + this.libro.getTitulo() + "' a '" + this.usuario.getNombre() + "'.";
 	}
 }
