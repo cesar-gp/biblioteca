@@ -26,34 +26,80 @@ public class Libro {
 	
 	// Constructor
 
-	public Libro(String nombre, String autor, Categoria categoria, String isbn) {
+	/**
+	 *	<p>
+	 *		Crea un libro con un nombre, autor,
+	 *		categoría e ISBN.
+	 *	</p>
+	 *	<p>
+	 *		El constructor está protegido para
+	 *		evitar la creación de libros sin registrar.
+	 *		Para crear nuevos libros de forma segura
+	 *		se debe usar {@link GestorLibros#registrar}.
+	 *	</p>
+	 * 
+	 *	@param	nombre		Nombre del libro
+	 *	@param	autor		Nombre de su autor
+	 *	@param	categoria	Categoría del libro
+	 *	@param	isbn		ISBN del libro
+	 */
+	protected Libro(String nombre, String autor, Categoria categoria, String isbn) {
 		this.titulo = nombre;
 		this.autor = autor;
 		this.categoria = categoria;
 		this.isbn = isbn;
 	}
 
-	//Devuelve el título del libro
+	/**
+	 *	Devuelve el título del libro.
+	 * 
+	 *	@return	Título del libro
+	 */
 	public String getTitulo() {
 		return this.titulo;
 	}
-	//Devuelve quien es el autor del libro
+	
+	/**
+	 *	Devuelve el autor del libro.
+	 * 
+	 *	@return	Autor del libro
+	 */
 	public String getAutor() {
 		return this.autor;
 	}
-	//Devuelve la categoría a la que pertenece el libro
+	
+	/**
+	 *	Devuelve la categoría del libro.
+	 * 
+	 *	@return	Categoría del libro
+	 */
 	public Categoria getCategoria() {
 		return this.categoria;
 	}
-	//Devuelve el ISBN propio del libro
+	
+	/**
+	 *	Devuelve el ISBN del libro.
+	 * 
+	 *	@return	ISBN del libro
+	 */
 	public String getIsbn() {
 		return this.isbn;
 	}
 
+	/**
+	 *	Devuelve una representación del
+	 *	libro como String, que incluye el
+	 *	autor, el título, la categoría
+	 *	y el ISBN del mismo.
+	 * 
+	 *	@return	Representación del libro
+	 *			como String
+	 */
 	@Override
 	public String toString() {
-		return "Libro: " + this.titulo + ". Del autor: " + this.autor + ". Categoría: " + this.categoria
-				+ ". Con el ISBN: " + this.isbn;
+		return this.autor + " - " + this.titulo
+			+ " (" + this.categoria + ") ["
+			+ this.isbn + "]";
 	}
 	
 }
