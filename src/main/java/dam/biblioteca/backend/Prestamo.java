@@ -17,10 +17,6 @@ package dam.biblioteca.backend;
  */
 public class Prestamo {
 
-	// Propiedades estáticas
-
-	private static Prestamo[] lista = new Prestamo[0];
-
 	// Propiedades no estáticas
 
 	private Usuario usuario;
@@ -36,10 +32,6 @@ public class Prestamo {
 	}
 
 	// Getters
-
-	public static Prestamo[] getPrestamos() {
-		return lista;
-	}
 
 	public Usuario getUsuario() {
 		return this.usuario;

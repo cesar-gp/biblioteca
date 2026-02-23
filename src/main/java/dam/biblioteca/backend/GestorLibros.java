@@ -5,9 +5,9 @@ import dam.biblioteca.enums.Criterio;
 
 public class GestorLibros {
 	
-	// Propiedades estáticas
+	// Propiedades no estáticas
 
-	Libro[] lista = new Libro[0];
+	private Libro[] lista = new Libro[0];
 
 	// Funciones
 
