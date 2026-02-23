@@ -73,6 +73,7 @@ public class GestorLibros {
 					encuentro = lista[i].getCategoria().name().contains(dato);
 					break;
 				default:
+					// ¿Criterio desconocido? Consulta inválida.
 					return null;
 			}
 			
