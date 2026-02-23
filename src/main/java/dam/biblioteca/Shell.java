@@ -591,8 +591,26 @@ public class Shell {
 
 				return ERR_COMANDO + err;
 			case "l": case "libro":
-				// No soportado.
-				return ERR_DESCONOCIDO;
+				// Sacar isbn del libro a borrar.
+				String isbn;
+				if(argv.length < 3) isbn = respuesta("ISBN: ", false);
+				else isbn = argv[2];
+
+				// Intentar borrar el libro e informar del resultado.
+				int errLib = gLibros.eliminar(isbn);
+				switch(errLib) {
+					case 0:
+						imprimir("Se ha eliminado el libro con el ISBN '" + isbn + "'.");
+						break;
+					case 1:
+						imprimir("Error: ese libro no está registrado en la biblioteca.");
+						break;
+					default:
+						imprimir("Error: fallo desconocido al intentar eliminar el libro.");
+						break;
+				}
+
+				return ERR_COMANDO + errLib;
 			case "p": case "prestamo": case "préstamo":
 				// No soportado.
 				return ERR_DESCONOCIDO;

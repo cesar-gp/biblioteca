@@ -142,4 +142,56 @@ public class GestorLibros {
 		return 0;
 	}
 	
+	/**
+	 *	<p>
+	 *		Elimina un libro del listado.
+	 *	</p>
+	 *	<p>
+	 *		La única situación en la que la función no
+	 *		cumple su cometido es si el libro introducido
+	 *		es nulo o no está registrado.
+	 *	</p>
+	 * 
+	 *	@param	libro	Libro a eliminar del listado
+	 *	
+	 *	@return	Código de error (0 si no hay errores)
+	 */
+	public int eliminar(Libro libro) {
+		// ¿Libro nulo? Error 1 (nulo o no registrado).
+		if(libro == null) return 1;
+
+		// Conseguir índice del libro en la lista.
+		int indice = -1;
+		for(int i = 0; i < this.lista.length && indice == -1; i++)
+			if(this.lista[i] == libro) indice = i;
+
+		// ¿No está registrado? Error 1 (nulo o no registrado).
+		if(indice == -1) return 1;
+
+		// Crear copia de la lista sin el elemento en ese índice
+		// y sustituir la lista original por la copia.
+		Libro[] copia = new Libro[this.lista.length - 1];
+		for(int i = 0; i < indice; i++)
+			copia[i] = this.lista[i];
+
+		for(int i = indice; i < this.lista.length - 1; i++)
+			copia[i] = this.lista[i + 1];
+
+		this.lista = copia;
+
+		// Operación realizada.
+		return 0;
+	}
+
+	/**
+	 *	Llamada a {@link #eliminar(Libro)}
+	 *	que solo requiere el nombre del libro.
+	 * 
+	 *	@param	libro	Nombre del libro
+	 *
+	 *	@return	Código de error (0 si no hay errores)
+	 */
+	public int eliminar(String libro) {
+		return this.eliminar(this.getLibro(libro));
+	}
 }
