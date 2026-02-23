@@ -45,4 +45,12 @@ public class Prestamo {
 	public String toString() {
 		return "Préstamo de '" + this.libro.getTitulo() + "' a '" + this.usuario.getNombre() + "'.";
 	}
+
+	@Override
+	public String toString() {
+		if(this.usuario == null || this.libro == null)
+			return "[Préstamo inválido]";
+
+		return "Préstamo de '" + this.libro.getTitulo() + "' a " + this.usuario.getNombre() + ".";
+	}
 }
