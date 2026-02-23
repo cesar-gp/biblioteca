@@ -130,24 +130,4 @@ public class GestorPrestamos {
 		// TODO: no soportado.
 		return new Usuario[0];
 	}
-
-	public int getTotalPrestamos(boolean activo) {
-		// Contar número de préstamos que cumplen la condición.
-		int len = 0;
-		for(int i = 0; i < this.lista.length; i++)
-			if(this.lista[i].isActivo() == activo) len++;
-
-		// Devolver el número.
-		return len;
-	}
-
-	public Libro[] getTopLibros(int limite) {
-		// TODO: no soportado.
-		return new Libro[0];
-	}
-
-	public Usuario[] getTopUsuarios(int limite) {
-		// TODO: no soportado.
-		return new Usuario[0];
-	}
 }
