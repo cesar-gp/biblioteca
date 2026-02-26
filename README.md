@@ -8,7 +8,7 @@ Es una entrega para la actividad *Sistema de Gestión de una Biblioteca Digital*
 
 ### Pre-requisitos
 
-- Tener Java 21 instalado o un IDE que venga con su propia instalación.
+- Tener Java 8 o superior instalado, o un IDE que venga con su propia instalación.
 - Tener Maven instalado o un IDE que venga con su propia instalación.
 - Tener acceso a Internet para poder clonar el repositorio.
 
